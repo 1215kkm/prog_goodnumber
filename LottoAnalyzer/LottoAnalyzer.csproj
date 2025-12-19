@@ -5,7 +5,6 @@
     <TargetFramework>net8.0-windows</TargetFramework>
     <Nullable>enable</Nullable>
     <UseWPF>true</UseWPF>
-    <ApplicationIcon>Resources\lotto.ico</ApplicationIcon>
     <Authors>LottoAnalyzer</Authors>
     <Description>로또 복권 번호 분석 및 추천 프로그램</Description>
   </PropertyGroup>
