@@ -1,7 +1,6 @@
 using System;
 using System.Collections.ObjectModel;
 using System.Threading.Tasks;
-using System.Windows.Input;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using LottoAnalyzer.Models;
@@ -41,6 +40,13 @@ namespace LottoAnalyzer.ViewModels
         public ObservableCollection<RecommendedNumbers> Recommendations { get; } = new();
         public ObservableCollection<LottoResult> RecentResults { get; } = new();
 
+        // 고급 분석 데이터
+        public ObservableCollection<NumberPair> TopPairs { get; } = new();
+        public ObservableCollection<NumberTriple> TopTriples { get; } = new();
+        public ObservableCollection<NumberStatistics> HotNumbers { get; } = new();
+        public ObservableCollection<NumberStatistics> ColdNumbers { get; } = new();
+        public ObservableCollection<NumberCycle> NumberCycles { get; } = new();
+
         // 패턴 분석 결과
         [ObservableProperty]
         private string _oddEvenRatioText = "";
@@ -53,6 +59,15 @@ namespace LottoAnalyzer.ViewModels
 
         [ObservableProperty]
         private string _consecutivePatternText = "";
+
+        [ObservableProperty]
+        private string _lastDigitsText = "";
+
+        [ObservableProperty]
+        private string _primeNumbersText = "";
+
+        [ObservableProperty]
+        private string _acValuesText = "";
 
         // 차트용 데이터
         public ObservableCollection<ChartData> FrequencyChartData { get; } = new();
@@ -104,17 +119,17 @@ namespace LottoAnalyzer.ViewModels
         private void LoadSampleData()
         {
             IsLoading = true;
-            StatusMessage = "샘플 데이터 로딩 중...";
+            StatusMessage = "실제 로또 데이터 (2020-2024년) 로딩 중...";
 
             try
             {
                 _allResults = _dataService.GetSampleData();
-                StatusMessage = $"샘플 데이터 {_allResults.Count}회차 로딩 완료!";
+                StatusMessage = $"실제 데이터 {_allResults.Count}회차 로딩 완료! (891회~1148회)";
                 AnalyzeData();
             }
             catch (Exception ex)
             {
-                StatusMessage = $"샘플 데이터 로딩 오류: {ex.Message}";
+                StatusMessage = $"데이터 로딩 오류: {ex.Message}";
             }
             finally
             {
@@ -173,6 +188,9 @@ namespace LottoAnalyzer.ViewModels
                 RangeStatistics.Add(stat);
             }
 
+            // 고급 분석
+            AnalyzeAdvanced();
+
             // 패턴 분석
             AnalyzePatterns();
 
@@ -183,15 +201,60 @@ namespace LottoAnalyzer.ViewModels
             GenerateRecommendations();
         }
 
+        private void AnalyzeAdvanced()
+        {
+            // 동반 출현 번호 쌍
+            var pairs = _statisticsService.AnalyzeNumberPairs(_allResults, 20);
+            TopPairs.Clear();
+            foreach (var pair in pairs)
+            {
+                TopPairs.Add(pair);
+            }
+
+            // 동반 출현 번호 트리플
+            var triples = _statisticsService.AnalyzeNumberTriples(_allResults, 10);
+            TopTriples.Clear();
+            foreach (var triple in triples)
+            {
+                TopTriples.Add(triple);
+            }
+
+            // 핫 넘버
+            var hotNumbers = _statisticsService.AnalyzeHotNumbers(_allResults, 30);
+            HotNumbers.Clear();
+            foreach (var hot in hotNumbers)
+            {
+                HotNumbers.Add(hot);
+            }
+
+            // 콜드 넘버
+            var coldNumbers = _statisticsService.AnalyzeColdNumbers(_allResults, 30);
+            ColdNumbers.Clear();
+            foreach (var cold in coldNumbers)
+            {
+                ColdNumbers.Add(cold);
+            }
+
+            // 번호 출현 주기
+            var cycles = _statisticsService.AnalyzeNumberCycles(_allResults);
+            NumberCycles.Clear();
+            foreach (var cycle in cycles.Where(c => c.IsOverdue).Take(15))
+            {
+                NumberCycles.Add(cycle);
+            }
+        }
+
         private void AnalyzePatterns()
         {
             // 홀짝 비율
             var oddEvenRatio = _statisticsService.AnalyzeOddEvenRatio(_allResults);
-            OddEvenRatioText = string.Join("\n", oddEvenRatio.Take(5).Select(r => $"홀{r.Key.Split(':')[0]}:짝{r.Key.Split(':')[1]} → {r.Value}회 ({(double)r.Value / _allResults.Count * 100:F1}%)"));
+            OddEvenRatioText = string.Join("\n", oddEvenRatio.Take(5).Select(r =>
+                $"홀{r.Key.Split(':')[0]}:짝{r.Key.Split(':')[1]} → {r.Value}회 ({(double)r.Value / _allResults.Count * 100:F1}%)"));
 
             // 고저 비율
             var highLowRatio = _statisticsService.AnalyzeHighLowRatio(_allResults);
-            HighLowRatioText = string.Join("\n", highLowRatio.Take(5).Select(r => $"{r.Key} → {r.Value}회 ({(double)r.Value / _allResults.Count * 100:F1}%)"));
+            HighLowRatioText = string.Join("\n", highLowRatio.Take(5).Select(r =>
+                $"{r.Key} → {r.Value}회 ({(double)r.Value / _allResults.Count * 100:F1}%)"));
 
             // 합계 범위
             var sumRange = _statisticsService.AnalyzeSumRange(_allResults);
@@ -203,6 +266,21 @@ namespace LottoAnalyzer.ViewModels
                 p.ConsecutiveCount == 0
                     ? $"연속 없음 → {p.Occurrences}회 ({p.Percentage}%)"
                     : $"{p.ConsecutiveCount}개 연속 → {p.Occurrences}회 ({p.Percentage}%)"));
+
+            // 끝자리 분석
+            var lastDigits = _statisticsService.AnalyzeLastDigits(_allResults);
+            LastDigitsText = string.Join("\n", lastDigits.Take(5).Select(l =>
+                $"끝자리 {l.Key} → {l.Value}회 ({(double)l.Value / (_allResults.Count * 6) * 100:F1}%)"));
+
+            // 소수 포함 분석
+            var primes = _statisticsService.AnalyzePrimeNumbers(_allResults);
+            PrimeNumbersText = string.Join("\n", primes.Select(p =>
+                $"소수 {p.Key}개 → {p.Value}회 ({(double)p.Value / _allResults.Count * 100:F1}%)"));
+
+            // AC값 분석
+            var acValues = _statisticsService.AnalyzeACValues(_allResults);
+            AcValuesText = string.Join("\n", acValues.Take(5).Select(a =>
+                $"AC {a.Key} → {a.Value}회 ({(double)a.Value / _allResults.Count * 100:F1}%)"));
         }
 
         private void UpdateChartData(List<NumberStatistics> stats)
@@ -231,7 +309,7 @@ namespace LottoAnalyzer.ViewModels
                 Recommendations.Add(rec);
             }
 
-            StatusMessage = "추천 번호가 생성되었습니다!";
+            StatusMessage = $"8가지 AI 추천 번호가 생성되었습니다! (분석 데이터: {_allResults.Count}회차)";
         }
 
         [RelayCommand]
