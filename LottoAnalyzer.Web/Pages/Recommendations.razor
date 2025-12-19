@@ -22,10 +22,10 @@
         </button>
     </div>
 
-    @if (Recommendations.Any())
+    @if (RecommendationList.Any())
     {
         <div class="grid grid-2">
-            @foreach (var rec in Recommendations)
+            @foreach (var rec in RecommendationList)
             {
                 <RecommendationCard Recommendation="@rec" />
             }
@@ -52,7 +52,7 @@
     [Inject] public RecommendationService RecommendationService { get; set; } = default!;
 
     private bool IsLoading = false;
-    private List<RecommendedNumbers> Recommendations = new();
+    private List<RecommendedNumbers> RecommendationList = new();
 
     private void GenerateRecommendations()
     {
@@ -62,7 +62,7 @@
         try
         {
             var allResults = DataService.GetSampleData();
-            Recommendations = RecommendationService.GenerateRecommendations(allResults);
+            RecommendationList = RecommendationService.GenerateRecommendations(allResults);
         }
         finally
         {
