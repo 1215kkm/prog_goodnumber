@@ -3,7 +3,7 @@ using System.Globalization;
 using System.Windows;
 using System.Windows.Data;
 using System.Windows.Media;
-using LottoAnalyzer.Models;
+using LottoAnalyzer.Core.Models;
 
 namespace LottoAnalyzer.Converters
 {

@@ -1,9 +1,9 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using LottoAnalyzer.Models;
+using LottoAnalyzer.Core.Models;
 
-namespace LottoAnalyzer.Services
+namespace LottoAnalyzer.Core.Services
 {
     /// <summary>
     /// 고급 번호 추천 서비스 (AI 기반 알고리즘)

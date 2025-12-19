@@ -1,9 +1,9 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using LottoAnalyzer.Models;
+using LottoAnalyzer.Core.Models;
 
-namespace LottoAnalyzer.Services
+namespace LottoAnalyzer.Core.Services
 {
     /// <summary>
     /// 로또 통계 분석 서비스 (고급 분석 기능 포함)
@@ -545,46 +545,5 @@ namespace LottoAnalyzer.Services
 
             return Math.Min(100, score);
         }
-    }
-
-    /// <summary>
-    /// 번호 쌍 모델
-    /// </summary>
-    public class NumberPair
-    {
-        public int Number1 { get; set; }
-        public int Number2 { get; set; }
-        public int Count { get; set; }
-        public double Percentage { get; set; }
-
-        public string Display => $"{Number1} - {Number2}";
-    }
-
-    /// <summary>
-    /// 번호 트리플 모델
-    /// </summary>
-    public class NumberTriple
-    {
-        public int Number1 { get; set; }
-        public int Number2 { get; set; }
-        public int Number3 { get; set; }
-        public int Count { get; set; }
-        public double Percentage { get; set; }
-
-        public string Display => $"{Number1} - {Number2} - {Number3}";
-    }
-
-    /// <summary>
-    /// 번호 출현 주기 모델
-    /// </summary>
-    public class NumberCycle
-    {
-        public int Number { get; set; }
-        public double AverageGap { get; set; }
-        public int MinGap { get; set; }
-        public int MaxGap { get; set; }
-        public int CurrentGap { get; set; }
-
-        public bool IsOverdue => CurrentGap > AverageGap * 1.5;
     }
 }

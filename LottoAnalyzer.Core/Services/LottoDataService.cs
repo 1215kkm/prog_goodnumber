@@ -2,10 +2,10 @@ using System;
 using System.Collections.Generic;
 using System.Net.Http;
 using System.Threading.Tasks;
-using LottoAnalyzer.Models;
+using LottoAnalyzer.Core.Models;
 using Newtonsoft.Json.Linq;
 
-namespace LottoAnalyzer.Services
+namespace LottoAnalyzer.Core.Services
 {
     /// <summary>
     /// 로또 데이터 서비스 - 동행복권 API 및 실제 데이터
@@ -20,6 +20,12 @@ namespace LottoAnalyzer.Services
         public LottoDataService()
         {
             _httpClient = new HttpClient();
+            _httpClient.Timeout = TimeSpan.FromSeconds(10);
+        }
+
+        public LottoDataService(HttpClient httpClient)
+        {
+            _httpClient = httpClient;
             _httpClient.Timeout = TimeSpan.FromSeconds(10);
         }
 

@@ -1,0 +1,19 @@
+@* 통계 바 컴포넌트 *@
+
+<div class="stat-item">
+    <span class="stat-rank">@Rank</span>
+    <span class="stat-number">
+        <LottoBall Number="@Number" Small="true" />
+    </span>
+    <div class="stat-bar">
+        <div class="stat-bar-fill" style="width: @(Percentage)%"></div>
+    </div>
+    <span class="stat-value">@Count회 (@Percentage%)</span>
+</div>
+
+@code {
+    [Parameter] public int Rank { get; set; }
+    [Parameter] public int Number { get; set; }
+    [Parameter] public int Count { get; set; }
+    [Parameter] public double Percentage { get; set; }
+}

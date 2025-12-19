@@ -1,0 +1,199 @@
+@page "/statistics"
+
+<PageTitle>통계 분석 - 로또 분석기</PageTitle>
+
+<div class="container">
+    <h1 style="margin-bottom: 20px;">통계 분석</h1>
+
+    @if (!IsDataLoaded)
+    {
+        <div class="card" style="text-align: center; padding: 40px;">
+            <p>데이터를 먼저 불러와주세요.</p>
+            <button class="btn btn-primary" @onclick="LoadData">데이터 분석</button>
+        </div>
+    }
+    else
+    {
+        <!-- 탭 메뉴 -->
+        <div class="tabs">
+            <span class="tab @(ActiveTab == "overall" ? "active" : "")" @onclick='() => ActiveTab = "overall"'>전체 통계</span>
+            <span class="tab @(ActiveTab == "monthly" ? "active" : "")" @onclick='() => ActiveTab = "monthly"'>월별 통계</span>
+            <span class="tab @(ActiveTab == "seasonal" ? "active" : "")" @onclick='() => ActiveTab = "seasonal"'>계절별 통계</span>
+            <span class="tab @(ActiveTab == "yearly" ? "active" : "")" @onclick='() => ActiveTab = "yearly"'>연도별 통계</span>
+            <span class="tab @(ActiveTab == "patterns" ? "active" : "")" @onclick='() => ActiveTab = "patterns"'>패턴 분석</span>
+        </div>
+
+        <!-- 전체 통계 -->
+        @if (ActiveTab == "overall")
+        {
+            <div class="card">
+                <div class="card-header">전체 번호별 출현 빈도 (45개)</div>
+                <div class="number-grid">
+                    @foreach (var stat in AllStatistics.OrderBy(s => s.Number))
+                    {
+                        <div style="text-align: center; padding: 10px;">
+                            <LottoBall Number="@stat.Number" />
+                            <div style="font-size: 12px; color: #666; margin-top: 5px;">
+                                @stat.Count회<br/>
+                                @stat.Percentage%
+                            </div>
+                        </div>
+                    }
+                </div>
+            </div>
+
+            <div class="grid grid-2">
+                <div class="card">
+                    <div class="card-header">핫 넘버 (최근 30회 빈출)</div>
+                    @foreach (var num in HotNumbers)
+                    {
+                        <StatBar Rank="@(HotNumbers.IndexOf(num) + 1)" Number="@num.Number"
+                                 Count="@num.Count" Percentage="@num.Percentage" />
+                    }
+                </div>
+                <div class="card">
+                    <div class="card-header">콜드 넘버 (최근 30회 저빈도)</div>
+                    @foreach (var num in ColdNumbers)
+                    {
+                        <StatBar Rank="@(ColdNumbers.IndexOf(num) + 1)" Number="@num.Number"
+                                 Count="@num.Count" Percentage="@num.Percentage" />
+                    }
+                </div>
+            </div>
+        }
+
+        <!-- 월별 통계 -->
+        @if (ActiveTab == "monthly")
+        {
+            <div class="grid grid-3">
+                @foreach (var monthStat in MonthlyStatistics)
+                {
+                    <div class="card period-card">
+                        <div class="period-title">@monthStat.MonthName (총 @monthStat.TotalDraws회)</div>
+                        <div class="period-numbers">
+                            @foreach (var num in monthStat.TopNumbers.Take(6))
+                            {
+                                <LottoBall Number="@num.Number" Small="true" />
+                            }
+                        </div>
+                    </div>
+                }
+            </div>
+        }
+
+        <!-- 계절별 통계 -->
+        @if (ActiveTab == "seasonal")
+        {
+            <div class="grid grid-2">
+                @foreach (var seasonStat in SeasonalStatistics)
+                {
+                    <div class="card period-card">
+                        <div class="period-title">@seasonStat.SeasonName (총 @seasonStat.TotalDraws회)</div>
+                        <p style="color: #666; margin-bottom: 10px;">가장 많이 나온 번호:</p>
+                        <div class="period-numbers">
+                            @foreach (var num in seasonStat.TopNumbers.Take(10))
+                            {
+                                <LottoBall Number="@num.Number" Small="true" />
+                            }
+                        </div>
+                    </div>
+                }
+            </div>
+        }
+
+        <!-- 연도별 통계 -->
+        @if (ActiveTab == "yearly")
+        {
+            @foreach (var yearStat in YearlyStatistics)
+            {
+                <div class="card">
+                    <div class="card-header">@yearStat.Year년 (총 @yearStat.TotalDraws회)</div>
+                    <div style="display: flex; gap: 10px; flex-wrap: wrap;">
+                        @foreach (var num in yearStat.TopNumbers)
+                        {
+                            <div style="text-align: center;">
+                                <LottoBall Number="@num.Number" />
+                                <div style="font-size: 11px; color: #666;">@num.Count회</div>
+                            </div>
+                        }
+                    </div>
+                </div>
+            }
+        }
+
+        <!-- 패턴 분석 -->
+        @if (ActiveTab == "patterns")
+        {
+            <div class="grid grid-2">
+                <div class="card">
+                    <div class="card-header">홀짝 비율</div>
+                    <pre style="background: #f5f5f5; padding: 15px; border-radius: 8px;">@OddEvenText</pre>
+                </div>
+                <div class="card">
+                    <div class="card-header">고저 비율 (22 기준)</div>
+                    <pre style="background: #f5f5f5; padding: 15px; border-radius: 8px;">@HighLowText</pre>
+                </div>
+                <div class="card">
+                    <div class="card-header">합계 분석</div>
+                    <pre style="background: #f5f5f5; padding: 15px; border-radius: 8px;">@SumRangeText</pre>
+                </div>
+                <div class="card">
+                    <div class="card-header">연속 번호 패턴</div>
+                    <pre style="background: #f5f5f5; padding: 15px; border-radius: 8px;">@ConsecutiveText</pre>
+                </div>
+            </div>
+        }
+    }
+</div>
+
+@code {
+    [Inject] public LottoDataService DataService { get; set; } = default!;
+    [Inject] public StatisticsService StatisticsService { get; set; } = default!;
+
+    private bool IsDataLoaded = false;
+    private string ActiveTab = "overall";
+
+    private List<NumberStatistics> AllStatistics = new();
+    private List<NumberStatistics> HotNumbers = new();
+    private List<NumberStatistics> ColdNumbers = new();
+    private List<MonthlyStatistics> MonthlyStatistics = new();
+    private List<SeasonalStatistics> SeasonalStatistics = new();
+    private List<YearlyStatistics> YearlyStatistics = new();
+
+    private string OddEvenText = "";
+    private string HighLowText = "";
+    private string SumRangeText = "";
+    private string ConsecutiveText = "";
+
+    private void LoadData()
+    {
+        var allResults = DataService.GetSampleData();
+
+        AllStatistics = StatisticsService.CalculateOverallStatistics(allResults);
+        HotNumbers = StatisticsService.AnalyzeHotNumbers(allResults, 30);
+        ColdNumbers = StatisticsService.AnalyzeColdNumbers(allResults, 30);
+        MonthlyStatistics = StatisticsService.CalculateMonthlyStatistics(allResults);
+        SeasonalStatistics = StatisticsService.CalculateSeasonalStatistics(allResults);
+        YearlyStatistics = StatisticsService.CalculateYearlyStatistics(allResults);
+
+        // 패턴 분석
+        var oddEven = StatisticsService.AnalyzeOddEvenRatio(allResults);
+        OddEvenText = string.Join("\n", oddEven.Take(5).Select(r =>
+            $"홀{r.Key.Split(':')[0]}:짝{r.Key.Split(':')[1]} → {r.Value}회 ({(double)r.Value / allResults.Count * 100:F1}%)"));
+
+        var highLow = StatisticsService.AnalyzeHighLowRatio(allResults);
+        HighLowText = string.Join("\n", highLow.Take(5).Select(r =>
+            $"{r.Key} → {r.Value}회 ({(double)r.Value / allResults.Count * 100:F1}%)"));
+
+        var sumRange = StatisticsService.AnalyzeSumRange(allResults);
+        SumRangeText = $"최소: {sumRange.Min}\n최대: {sumRange.Max}\n평균: {sumRange.Average:F1}\n최다 구간: {sumRange.MostCommonRangeStart}~{sumRange.MostCommonRangeEnd}";
+
+        var consecutive = StatisticsService.AnalyzeConsecutivePatterns(allResults);
+        ConsecutiveText = string.Join("\n", consecutive.Select(p =>
+            p.ConsecutiveCount == 0
+                ? $"연속 없음 → {p.Occurrences}회 ({p.Percentage}%)"
+                : $"{p.ConsecutiveCount}개 연속 → {p.Occurrences}회 ({p.Percentage}%)"));
+
+        IsDataLoaded = true;
+    }
+}

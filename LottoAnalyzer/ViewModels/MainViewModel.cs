@@ -3,8 +3,8 @@ using System.Collections.ObjectModel;
 using System.Threading.Tasks;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
-using LottoAnalyzer.Models;
-using LottoAnalyzer.Services;
+using LottoAnalyzer.Core.Models;
+using LottoAnalyzer.Core.Services;
 using System.Linq;
 using System.Collections.Generic;
 

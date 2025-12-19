@@ -1,0 +1,145 @@
+@page "/"
+
+<PageTitle>로또 분석기 - AI 기반 번호 추천</PageTitle>
+
+<div class="container">
+    <section class="hero" style="text-align: center; padding: 40px 0;">
+        <h1 style="font-size: 2.5em; color: #333; margin-bottom: 10px;">
+            로또 분석기
+        </h1>
+        <p style="font-size: 1.2em; color: #666; margin-bottom: 30px;">
+            5년간의 실제 당첨 데이터 기반 통계 분석 및 AI 번호 추천
+        </p>
+        <div style="margin-bottom: 20px;">
+            <button class="btn btn-primary" @onclick="LoadData" disabled="@IsLoading">
+                @if (IsLoading)
+                {
+                    <span>데이터 분석 중...</span>
+                }
+                else
+                {
+                    <span>데이터 분석 시작</span>
+                }
+            </button>
+        </div>
+        @if (!string.IsNullOrEmpty(StatusMessage))
+        {
+            <p style="color: #667eea;">@StatusMessage</p>
+        }
+    </section>
+
+    @if (IsDataLoaded)
+    {
+        <!-- 최근 당첨 결과 -->
+        <div class="card">
+            <div class="card-header">최근 당첨 결과</div>
+            <div class="table-container">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>회차</th>
+                            <th>추첨일</th>
+                            <th>당첨번호</th>
+                            <th>보너스</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach (var result in RecentResults)
+                        {
+                            <tr>
+                                <td><strong>@result.Round회</strong></td>
+                                <td>@result.DrawDate.ToString("yyyy-MM-dd")</td>
+                                <td>
+                                    <div style="display: flex; gap: 5px;">
+                                        @foreach (var num in result.Numbers)
+                                        {
+                                            <LottoBall Number="@num" Small="true" />
+                                        }
+                                    </div>
+                                </td>
+                                <td>
+                                    <LottoBall Number="@result.BonusNumber" Small="true" />
+                                </td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <!-- 요약 통계 -->
+        <div class="grid grid-3">
+            <div class="card">
+                <div class="card-header">분석 데이터</div>
+                <p style="font-size: 2em; font-weight: bold; color: #667eea; margin: 0;">
+                    @TotalDrawCount회
+                </p>
+                <p style="color: #666;">총 분석 회차</p>
+            </div>
+            <div class="card">
+                <div class="card-header">분석 기간</div>
+                <p style="font-size: 2em; font-weight: bold; color: #667eea; margin: 0;">
+                    2020~2024
+                </p>
+                <p style="color: #666;">5개년 데이터</p>
+            </div>
+            <div class="card">
+                <div class="card-header">AI 추천</div>
+                <p style="font-size: 2em; font-weight: bold; color: #667eea; margin: 0;">
+                    8가지
+                </p>
+                <p style="color: #666;">추천 알고리즘</p>
+            </div>
+        </div>
+
+        <!-- 상위 10개 번호 -->
+        <div class="card">
+            <div class="card-header">가장 많이 나온 번호 TOP 10</div>
+            @foreach (var (stat, index) in TopNumbers.Select((s, i) => (s, i)))
+            {
+                <StatBar Rank="@(index + 1)" Number="@stat.Number"
+                         Count="@stat.Count" Percentage="@stat.Percentage" />
+            }
+        </div>
+    }
+</div>
+
+@code {
+    [Inject] public LottoDataService DataService { get; set; } = default!;
+    [Inject] public StatisticsService StatisticsService { get; set; } = default!;
+
+    private bool IsLoading = false;
+    private bool IsDataLoaded = false;
+    private string StatusMessage = "";
+    private int TotalDrawCount = 0;
+    private List<LottoResult> RecentResults = new();
+    private List<NumberStatistics> TopNumbers = new();
+
+    private void LoadData()
+    {
+        IsLoading = true;
+        StatusMessage = "실제 로또 데이터 분석 중...";
+        StateHasChanged();
+
+        try
+        {
+            var allResults = DataService.GetSampleData();
+            TotalDrawCount = allResults.Count;
+            RecentResults = allResults.Take(10).ToList();
+
+            var stats = StatisticsService.CalculateOverallStatistics(allResults);
+            TopNumbers = stats.Take(10).ToList();
+
+            StatusMessage = $"{allResults.Count}회차 데이터 분석 완료! (891회~1148회)";
+            IsDataLoaded = true;
+        }
+        catch (Exception ex)
+        {
+            StatusMessage = $"오류: {ex.Message}";
+        }
+        finally
+        {
+            IsLoading = false;
+        }
+    }
+}
