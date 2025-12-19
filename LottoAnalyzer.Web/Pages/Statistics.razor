@@ -34,7 +34,7 @@
                         <div style="text-align: center; padding: 10px;">
                             <LottoBall Number="@stat.Number" />
                             <div style="font-size: 12px; color: #666; margin-top: 5px;">
-                                @stat.Count회<br/>
+                                @(stat.Count)회<br/>
                                 @stat.Percentage%
                             </div>
                         </div>
@@ -69,7 +69,7 @@
                 @foreach (var monthStat in MonthlyStatistics)
                 {
                     <div class="card period-card">
-                        <div class="period-title">@monthStat.MonthName (총 @monthStat.TotalDraws회)</div>
+                        <div class="period-title">@(monthStat.MonthName) (총 @(monthStat.TotalDraws)회)</div>
                         <div class="period-numbers">
                             @foreach (var num in monthStat.TopNumbers.Take(6))
                             {
@@ -88,7 +88,7 @@
                 @foreach (var seasonStat in SeasonalStatistics)
                 {
                     <div class="card period-card">
-                        <div class="period-title">@seasonStat.SeasonName (총 @seasonStat.TotalDraws회)</div>
+                        <div class="period-title">@(seasonStat.SeasonName) (총 @(seasonStat.TotalDraws)회)</div>
                         <p style="color: #666; margin-bottom: 10px;">가장 많이 나온 번호:</p>
                         <div class="period-numbers">
                             @foreach (var num in seasonStat.TopNumbers.Take(10))
@@ -107,13 +107,13 @@
             @foreach (var yearStat in YearlyStatistics)
             {
                 <div class="card">
-                    <div class="card-header">@yearStat.Year년 (총 @yearStat.TotalDraws회)</div>
+                    <div class="card-header">@(yearStat.Year)년 (총 @(yearStat.TotalDraws)회)</div>
                     <div style="display: flex; gap: 10px; flex-wrap: wrap;">
                         @foreach (var num in yearStat.TopNumbers)
                         {
                             <div style="text-align: center;">
                                 <LottoBall Number="@num.Number" />
-                                <div style="font-size: 11px; color: #666;">@num.Count회</div>
+                                <div style="font-size: 11px; color: #666;">@(num.Count)회</div>
                             </div>
                         }
                     </div>

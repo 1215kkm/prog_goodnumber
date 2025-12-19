@@ -47,7 +47,7 @@
                         @foreach (var result in RecentResults)
                         {
                             <tr>
-                                <td><strong>@result.Round회</strong></td>
+                                <td><strong>@(result.Round)회</strong></td>
                                 <td>@result.DrawDate.ToString("yyyy-MM-dd")</td>
                                 <td>
                                     <div style="display: flex; gap: 5px;">
@@ -72,7 +72,7 @@
             <div class="card">
                 <div class="card-header">분석 데이터</div>
                 <p style="font-size: 2em; font-weight: bold; color: #667eea; margin: 0;">
-                    @TotalDrawCount회
+                    @(TotalDrawCount)회
                 </p>
                 <p style="color: #666;">총 분석 회차</p>
             </div>
