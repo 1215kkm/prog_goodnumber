@@ -1,0 +1,33 @@
+@inherits LayoutComponentBase
+
+<div class="page">
+    <main>
+        <nav class="navbar">
+            <div class="container">
+                <a href="/" class="navbar-brand">
+                    <span class="lotto-ball yellow">L</span>
+                    <span class="lotto-ball blue">O</span>
+                    <span class="lotto-ball red">T</span>
+                    <span class="lotto-ball gray">T</span>
+                    <span class="lotto-ball green">O</span>
+                    <span class="title">분석기</span>
+                </a>
+                <div class="nav-links">
+                    <NavLink href="/" Match="NavLinkMatch.All">홈</NavLink>
+                    <NavLink href="/statistics">통계분석</NavLink>
+                    <NavLink href="/recommendations">AI추천</NavLink>
+                </div>
+            </div>
+        </nav>
+
+        <article class="content">
+            @Body
+        </article>
+    </main>
+</div>
+
+<footer class="footer">
+    <div class="container">
+        <p>&copy; 2024 로또 분석기 - 통계 기반 번호 분석 및 AI 추천</p>
+    </div>
+</footer>

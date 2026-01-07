@@ -1,0 +1,29 @@
+@* AI 추천 카드 컴포넌트 *@
+
+<div class="recommendation-card">
+    <div class="recommendation-header">
+        <span class="recommendation-type">@Recommendation.RecommendationType</span>
+        <span class="confidence @GetConfidenceClass()">
+            신뢰도 @Recommendation.Confidence%
+        </span>
+    </div>
+    <div class="recommendation-numbers">
+        @foreach (var number in Recommendation.Numbers)
+        {
+            <LottoBall Number="@number" />
+        }
+    </div>
+    <p class="recommendation-desc">@Recommendation.Description</p>
+</div>
+
+@code {
+    [Parameter]
+    public RecommendedNumbers Recommendation { get; set; } = new();
+
+    private string GetConfidenceClass() => Recommendation.Confidence switch
+    {
+        >= 80 => "high",
+        >= 60 => "medium",
+        _ => "low"
+    };
+}

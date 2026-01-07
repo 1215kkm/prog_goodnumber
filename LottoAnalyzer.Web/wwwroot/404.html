@@ -1,0 +1,21 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>로또 분석기</title>
+    <script>
+        // GitHub Pages SPA 라우팅 처리
+        const path = window.location.pathname;
+        const repo = '/prog_goodnumber';
+        if (path.startsWith(repo)) {
+            const newPath = path.replace(repo, '');
+            sessionStorage.setItem('redirect', newPath || '/');
+            window.location.replace(repo + '/');
+        }
+    </script>
+</head>
+<body>
+    <p>리다이렉트 중...</p>
+</body>
+</html>

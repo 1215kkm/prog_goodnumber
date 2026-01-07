@@ -1,0 +1,24 @@
+@* 로또 번호 공 컴포넌트 *@
+
+<span class="ball @SizeClass @GetColorClass()" title="@Number">
+    @Number
+</span>
+
+@code {
+    [Parameter]
+    public int Number { get; set; }
+
+    [Parameter]
+    public bool Small { get; set; } = false;
+
+    private string SizeClass => Small ? "small" : "";
+
+    private string GetColorClass() => Number switch
+    {
+        >= 1 and <= 10 => "yellow",
+        >= 11 and <= 20 => "blue",
+        >= 21 and <= 30 => "red",
+        >= 31 and <= 40 => "gray",
+        _ => "green"
+    };
+}

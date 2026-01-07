@@ -1,0 +1,72 @@
+@page "/recommendations"
+
+<PageTitle>AI 추천 번호 - 로또 분석기</PageTitle>
+
+<div class="container">
+    <h1 style="margin-bottom: 10px;">AI 번호 추천</h1>
+    <p style="color: #666; margin-bottom: 20px;">
+        8가지 분석 알고리즘 기반 추천 번호입니다.
+        <strong>매번 다른 조합</strong>이 생성됩니다.
+    </p>
+
+    <div style="margin-bottom: 20px;">
+        <button class="btn btn-primary" @onclick="GenerateRecommendations">
+            @if (IsLoading)
+            {
+                <span>추천 생성 중...</span>
+            }
+            else
+            {
+                <span>새로운 추천 번호 생성</span>
+            }
+        </button>
+    </div>
+
+    @if (RecommendationList.Any())
+    {
+        <div class="grid grid-2">
+            @foreach (var rec in RecommendationList)
+            {
+                <RecommendationCard Recommendation="@rec" />
+            }
+        </div>
+
+        <div class="card" style="margin-top: 20px; background: #fff3cd;">
+            <p style="margin: 0; color: #856404;">
+                <strong>알림:</strong> 이 추천은 과거 통계 분석에 기반하며, 당첨을 보장하지 않습니다.
+                로또는 완전한 랜덤 추첨이므로 모든 번호가 동일한 확률을 가집니다.
+            </p>
+        </div>
+    }
+    else
+    {
+        <div class="card" style="text-align: center; padding: 40px;">
+            <p style="color: #666;">버튼을 클릭하여 AI 추천 번호를 생성하세요.</p>
+        </div>
+    }
+</div>
+
+@code {
+    [Inject] public LottoDataService DataService { get; set; } = default!;
+    [Inject] public StatisticsService StatisticsService { get; set; } = default!;
+    [Inject] public RecommendationService RecommendationService { get; set; } = default!;
+
+    private bool IsLoading = false;
+    private List<RecommendedNumbers> RecommendationList = new();
+
+    private void GenerateRecommendations()
+    {
+        IsLoading = true;
+        StateHasChanged();
+
+        try
+        {
+            var allResults = DataService.GetSampleData();
+            RecommendationList = RecommendationService.GenerateRecommendations(allResults);
+        }
+        finally
+        {
+            IsLoading = false;
+        }
+    }
+}
