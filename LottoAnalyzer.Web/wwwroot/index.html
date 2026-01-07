@@ -7,6 +7,29 @@
     <base href="/" />
     <link rel="stylesheet" href="css/app.css" />
     <link rel="icon" type="image/png" href="favicon.png" />
+    <!-- GitHub Pages SPA 라우팅 처리 -->
+    <script>
+        (function() {
+            var redirect = sessionStorage.redirect;
+            delete sessionStorage.redirect;
+            if (redirect && redirect !== location.href) {
+                history.replaceState(null, null, redirect);
+            }
+            // URL 파라미터로 전달된 경로 처리
+            var query = window.location.search;
+            if (query) {
+                var params = new URLSearchParams(query);
+                var path = params.get('p');
+                if (path) {
+                    var decoded = path.replace(/~and~/g, '&');
+                    var q = params.get('q');
+                    var newUrl = window.location.pathname.slice(0, -1) + decoded +
+                        (q ? '?' + q.replace(/~and~/g, '&') : '') + window.location.hash;
+                    history.replaceState(null, null, newUrl);
+                }
+            }
+        })();
+    </script>
 </head>
 <body>
     <div id="app">
