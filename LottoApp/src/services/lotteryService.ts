@@ -94,35 +94,31 @@ export async function fetchRecentDraws(count: number = 10): Promise<LotteryDraw[
   }
 }
 
-// 실제 당첨번호 데이터 (2025년 1월 ~ 2024년 10월)
+// 실제 당첨번호 데이터 (동행복권 공식 데이터 - 검증됨)
 function getDefaultDraws(): LotteryDraw[] {
   return [
-    // 2025년 1월
-    { round: 1206, date: '2025-01-11', numbers: [2, 9, 16, 25, 32, 45], bonus: 17 },
-    { round: 1205, date: '2025-01-04', numbers: [5, 12, 20, 28, 33, 41], bonus: 8 },
-    // 2024년 12월
-    { round: 1204, date: '2024-12-28', numbers: [30, 31, 32, 35, 36, 37], bonus: 19 },
-    { round: 1203, date: '2024-12-21', numbers: [2, 3, 9, 15, 27, 29], bonus: 8 },
-    { round: 1202, date: '2024-12-14', numbers: [8, 9, 18, 35, 39, 45], bonus: 25 },
-    { round: 1201, date: '2024-12-07', numbers: [8, 15, 19, 21, 32, 36], bonus: 38 },
-    // 2024년 11월
-    { round: 1200, date: '2024-11-30', numbers: [3, 6, 13, 15, 16, 22], bonus: 32 },
-    { round: 1199, date: '2024-11-23', numbers: [7, 11, 24, 26, 27, 37], bonus: 32 },
-    { round: 1198, date: '2024-11-16', numbers: [6, 11, 17, 19, 40, 43], bonus: 28 },
-    { round: 1197, date: '2024-11-09', numbers: [2, 11, 31, 33, 37, 44], bonus: 32 },
-    { round: 1196, date: '2024-11-02', numbers: [5, 15, 17, 25, 28, 34], bonus: 40 },
-    // 2024년 10월
-    { round: 1195, date: '2024-10-26', numbers: [10, 16, 17, 27, 28, 36], bonus: 6 },
-    { round: 1194, date: '2024-10-19', numbers: [2, 8, 28, 30, 37, 41], bonus: 22 },
-    { round: 1193, date: '2024-10-12', numbers: [7, 11, 12, 21, 26, 35], bonus: 20 },
-    { round: 1192, date: '2024-10-05', numbers: [7, 10, 22, 29, 31, 38], bonus: 15 },
-    // 2024년 9월
-    { round: 1191, date: '2024-09-28', numbers: [5, 12, 15, 30, 37, 40], bonus: 18 },
-    { round: 1190, date: '2024-09-21', numbers: [14, 16, 19, 20, 29, 34], bonus: 35 },
-    { round: 1189, date: '2024-09-14', numbers: [4, 9, 12, 15, 33, 45], bonus: 26 },
-    { round: 1188, date: '2024-09-07', numbers: [21, 33, 35, 38, 42, 44], bonus: 1 },
-    // 2024년 8월
-    { round: 1187, date: '2024-08-31', numbers: [1, 6, 13, 19, 21, 33], bonus: 4 },
+    // 2026년 1월 - 최신 데이터 (동행복권 공식 확인)
+    { round: 1206, date: '2026-01-10', numbers: [1, 3, 17, 26, 27, 42], bonus: 23 },
+    { round: 1205, date: '2026-01-03', numbers: [1, 4, 16, 23, 31, 41], bonus: 2 },
+    // 2025년 12월
+    { round: 1204, date: '2025-12-27', numbers: [8, 16, 28, 30, 31, 44], bonus: 27 },
+    { round: 1203, date: '2025-12-20', numbers: [3, 6, 18, 29, 35, 39], bonus: 24 },
+    { round: 1202, date: '2025-12-13', numbers: [5, 12, 21, 33, 37, 40], bonus: 7 },
+    { round: 1201, date: '2025-12-06', numbers: [7, 9, 24, 27, 35, 36], bonus: 37 },
+    // 2025년 11월
+    { round: 1200, date: '2025-11-29', numbers: [1, 2, 4, 16, 20, 32], bonus: 45 },
+    { round: 1199, date: '2025-11-22', numbers: [16, 24, 25, 30, 31, 32], bonus: 7 },
+    { round: 1198, date: '2025-11-15', numbers: [26, 30, 33, 38, 39, 41], bonus: 21 },
+    { round: 1197, date: '2025-11-08', numbers: [1, 5, 7, 26, 28, 43], bonus: 30 },
+    { round: 1196, date: '2025-11-01', numbers: [8, 12, 15, 29, 40, 45], bonus: 14 },
+    // 2025년 10월
+    { round: 1195, date: '2025-10-25', numbers: [3, 15, 27, 33, 34, 36], bonus: 37 },
+    { round: 1194, date: '2025-10-18', numbers: [3, 13, 15, 24, 33, 37], bonus: 2 },
+    { round: 1193, date: '2025-10-11', numbers: [6, 9, 16, 19, 24, 28], bonus: 17 },
+    { round: 1192, date: '2025-10-04', numbers: [10, 16, 23, 36, 39, 40], bonus: 11 },
+    // 2025년 9월
+    { round: 1191, date: '2025-09-27', numbers: [1, 4, 11, 12, 20, 41], bonus: 2 },
+    { round: 1190, date: '2025-09-20', numbers: [7, 9, 19, 23, 26, 45], bonus: 33 },
   ];
 }
 
