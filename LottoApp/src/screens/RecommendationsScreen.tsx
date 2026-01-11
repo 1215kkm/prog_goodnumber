@@ -49,7 +49,7 @@ export default function RecommendationsScreen() {
           key={index}
           style={[
             styles.card,
-            selectedIndex === index && styles.cardSelected
+            selectedIndex === index ? styles.cardSelected : undefined
           ]}
           onPress={() => setSelectedIndex(selectedIndex === index ? null : index)}
           activeOpacity={0.8}

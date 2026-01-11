@@ -115,13 +115,13 @@ export default function SettingsScreen() {
                     key={index}
                     style={[
                       styles.dayButton,
-                      settings.dayOfWeek === index && styles.dayButtonActive
+                      settings.dayOfWeek === index ? styles.dayButtonActive : undefined
                     ]}
                     onPress={() => handleDayChange(index)}
                   >
                     <Text style={[
                       styles.dayButtonText,
-                      settings.dayOfWeek === index && styles.dayButtonTextActive
+                      settings.dayOfWeek === index ? styles.dayButtonTextActive : undefined
                     ]}>
                       {day}
                     </Text>
@@ -140,13 +140,13 @@ export default function SettingsScreen() {
                       key={hour}
                       style={[
                         styles.hourButton,
-                        settings.hour === hour && styles.hourButtonActive
+                        settings.hour === hour ? styles.hourButtonActive : undefined
                       ]}
                       onPress={() => handleHourChange(hour)}
                     >
                       <Text style={[
                         styles.hourButtonText,
-                        settings.hour === hour && styles.hourButtonTextActive
+                        settings.hour === hour ? styles.hourButtonTextActive : undefined
                       ]}>
                         {hour.toString().padStart(2, '0')}:00
                       </Text>
