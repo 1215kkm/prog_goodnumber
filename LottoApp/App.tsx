@@ -1,92 +1,99 @@
 import React from 'react';
 import { StatusBar } from 'expo-status-bar';
-import { NavigationContainer } from '@react-navigation/native';
-import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
-import { Text, View, StyleSheet } from 'react-native';
+import { View, Text, StyleSheet, ScrollView } from 'react-native';
 
-import HomeScreen from './src/screens/HomeScreen';
-import StatisticsScreen from './src/screens/StatisticsScreen';
-import RecommendationsScreen from './src/screens/RecommendationsScreen';
-import SettingsScreen from './src/screens/SettingsScreen';
-
-const Tab = createBottomTabNavigator();
-
-function TabIcon({ icon, focused }: { icon: string; focused: boolean }) {
+export default function App() {
   return (
-    <View style={styles.tabIcon}>
-      <Text style={[styles.tabIconText, focused && styles.tabIconTextActive]}>
-        {icon}
-      </Text>
+    <View style={styles.container}>
+      <StatusBar style="light" />
+      <ScrollView>
+        <View style={styles.header}>
+          <Text style={styles.title}>로또 분석기</Text>
+          <Text style={styles.subtitle}>AI 기반 번호 추천</Text>
+        </View>
+
+        <View style={styles.card}>
+          <Text style={styles.cardTitle}>핫 넘버</Text>
+          <View style={styles.numbersRow}>
+            {[3, 13, 20, 27, 34, 39].map(num => (
+              <View key={num} style={styles.ball}>
+                <Text style={styles.ballText}>{num}</Text>
+              </View>
+            ))}
+          </View>
+        </View>
+
+        <View style={styles.card}>
+          <Text style={styles.cardTitle}>콜드 넘버</Text>
+          <View style={styles.numbersRow}>
+            {[8, 15, 23, 28, 36, 44].map(num => (
+              <View key={num} style={styles.ballCold}>
+                <Text style={styles.ballText}>{num}</Text>
+              </View>
+            ))}
+          </View>
+        </View>
+      </ScrollView>
     </View>
   );
 }
 
-export default function App() {
-  return (
-    <NavigationContainer>
-      <StatusBar style="light" />
-      <Tab.Navigator
-        screenOptions={{
-          headerShown: false,
-          tabBarStyle: {
-            backgroundColor: '#16213e',
-            borderTopColor: '#2a2a4a',
-            borderTopWidth: 1,
-            height: 85,
-            paddingBottom: 25,
-            paddingTop: 10,
-          },
-          tabBarActiveTintColor: '#ff6b35',
-          tabBarInactiveTintColor: '#888',
-          tabBarLabelStyle: {
-            fontSize: 12,
-            fontWeight: '600',
-          },
-        }}
-      >
-        <Tab.Screen
-          name="홈"
-          component={HomeScreen}
-          options={{
-            tabBarIcon: ({ focused }) => <TabIcon icon="🏠" focused={focused} />,
-          }}
-        />
-        <Tab.Screen
-          name="통계"
-          component={StatisticsScreen}
-          options={{
-            tabBarIcon: ({ focused }) => <TabIcon icon="📊" focused={focused} />,
-          }}
-        />
-        <Tab.Screen
-          name="추천"
-          component={RecommendationsScreen}
-          options={{
-            tabBarIcon: ({ focused }) => <TabIcon icon="🎯" focused={focused} />,
-          }}
-        />
-        <Tab.Screen
-          name="설정"
-          component={SettingsScreen}
-          options={{
-            tabBarIcon: ({ focused }) => <TabIcon icon="⚙️" focused={focused} />,
-          }}
-        />
-      </Tab.Navigator>
-    </NavigationContainer>
-  );
-}
-
 const styles = StyleSheet.create({
-  tabIcon: {
+  container: {
+    flex: 1,
+    backgroundColor: '#1a1a2e',
+  },
+  header: {
+    padding: 20,
+    paddingTop: 60,
     alignItems: 'center',
+  },
+  title: {
+    fontSize: 28,
+    fontWeight: 'bold',
+    color: '#ffffff',
+  },
+  subtitle: {
+    fontSize: 16,
+    color: '#888888',
+    marginTop: 5,
+  },
+  card: {
+    backgroundColor: '#16213e',
+    marginHorizontal: 20,
+    marginBottom: 15,
+    padding: 20,
+    borderRadius: 15,
+  },
+  cardTitle: {
+    fontSize: 20,
+    fontWeight: 'bold',
+    color: '#ffffff',
+    marginBottom: 15,
+  },
+  numbersRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-around',
+  },
+  ball: {
+    width: 45,
+    height: 45,
+    borderRadius: 23,
+    backgroundColor: '#ff6b35',
     justifyContent: 'center',
+    alignItems: 'center',
   },
-  tabIconText: {
-    fontSize: 24,
-    opacity: 0.5,
+  ballCold: {
+    width: 45,
+    height: 45,
+    borderRadius: 23,
+    backgroundColor: '#00bcd4',
+    justifyContent: 'center',
+    alignItems: 'center',
   },
-  tabIconTextActive: {
-    opacity: 1,
+  ballText: {
+    color: '#ffffff',
+    fontWeight: 'bold',
+    fontSize: 16,
   },
 });
