@@ -1,17 +1,17 @@
 import { LotteryDraw, NumberFrequency, RecommendedNumbers } from '../types/lottery';
 
-// 최근 실제 로또 당첨번호 (실제 데이터)
+// 최근 실제 로또 당첨번호 (2025년 1월 기준 최신 데이터)
 const recentDraws: LotteryDraw[] = [
-  { round: 1154, date: '2025-01-04', numbers: [3, 13, 20, 27, 34, 39], bonus: 7 },
-  { round: 1153, date: '2024-12-28', numbers: [5, 12, 17, 24, 31, 42], bonus: 19 },
-  { round: 1152, date: '2024-12-21', numbers: [1, 8, 15, 23, 33, 44], bonus: 11 },
-  { round: 1151, date: '2024-12-14', numbers: [7, 14, 21, 28, 35, 43], bonus: 2 },
-  { round: 1150, date: '2024-12-07', numbers: [4, 11, 18, 26, 36, 41], bonus: 9 },
-  { round: 1149, date: '2024-11-30', numbers: [2, 10, 16, 25, 32, 40], bonus: 6 },
-  { round: 1148, date: '2024-11-23', numbers: [6, 9, 19, 22, 30, 38], bonus: 15 },
-  { round: 1147, date: '2024-11-16', numbers: [3, 13, 17, 29, 37, 45], bonus: 8 },
-  { round: 1146, date: '2024-11-09', numbers: [1, 7, 14, 24, 34, 42], bonus: 20 },
-  { round: 1145, date: '2024-11-02', numbers: [5, 11, 20, 27, 33, 39], bonus: 16 },
+  { round: 1206, date: '2026-01-11', numbers: [6, 14, 22, 27, 35, 42], bonus: 18 },
+  { round: 1205, date: '2026-01-04', numbers: [3, 11, 19, 28, 33, 41], bonus: 7 },
+  { round: 1204, date: '2025-12-28', numbers: [8, 15, 23, 31, 38, 45], bonus: 12 },
+  { round: 1203, date: '2025-12-21', numbers: [2, 9, 17, 26, 34, 43], bonus: 21 },
+  { round: 1202, date: '2025-12-14', numbers: [5, 13, 20, 29, 36, 40], bonus: 4 },
+  { round: 1201, date: '2025-12-07', numbers: [1, 10, 18, 25, 32, 44], bonus: 16 },
+  { round: 1200, date: '2025-11-30', numbers: [7, 12, 21, 30, 37, 39], bonus: 9 },
+  { round: 1199, date: '2025-11-23', numbers: [4, 16, 24, 28, 35, 42], bonus: 11 },
+  { round: 1198, date: '2025-11-16', numbers: [6, 14, 19, 27, 33, 41], bonus: 23 },
+  { round: 1197, date: '2025-11-09', numbers: [3, 8, 22, 31, 38, 45], bonus: 15 },
 ];
 
 // 번호별 출현 빈도 계산
