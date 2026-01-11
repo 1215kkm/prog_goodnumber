@@ -1,9 +1,8 @@
-import React, { useEffect } from 'react';
+import React from 'react';
 import { StatusBar } from 'expo-status-bar';
 import { NavigationContainer } from '@react-navigation/native';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import { Text, View, StyleSheet } from 'react-native';
-import * as Notifications from 'expo-notifications';
 
 import HomeScreen from './src/screens/HomeScreen';
 import StatisticsScreen from './src/screens/StatisticsScreen';
@@ -11,15 +10,6 @@ import RecommendationsScreen from './src/screens/RecommendationsScreen';
 import SettingsScreen from './src/screens/SettingsScreen';
 
 const Tab = createBottomTabNavigator();
-
-// 알림 핸들러 설정
-Notifications.setNotificationHandler({
-  handleNotification: async () => ({
-    shouldShowAlert: true,
-    shouldPlaySound: true,
-    shouldSetBadge: true,
-  }),
-});
 
 function TabIcon({ icon, focused }: { icon: string; focused: boolean }) {
   return (
@@ -32,22 +22,6 @@ function TabIcon({ icon, focused }: { icon: string; focused: boolean }) {
 }
 
 export default function App() {
-  useEffect(() => {
-    // 알림 수신 리스너
-    const subscription = Notifications.addNotificationReceivedListener(notification => {
-      console.log('알림 수신:', notification);
-    });
-
-    const responseSubscription = Notifications.addNotificationResponseReceivedListener(response => {
-      console.log('알림 클릭:', response);
-    });
-
-    return () => {
-      subscription.remove();
-      responseSubscription.remove();
-    };
-  }, []);
-
   return (
     <NavigationContainer>
       <StatusBar style="light" />
