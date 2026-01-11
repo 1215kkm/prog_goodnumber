@@ -94,14 +94,22 @@ export async function fetchRecentDraws(count: number = 10): Promise<LotteryDraw[
   }
 }
 
-// 기본 데이터 (API 실패 시 폴백)
+// 기본 데이터 (API 실패 시 폴백) - 2024년~2025년 실제 당첨번호
 function getDefaultDraws(): LotteryDraw[] {
   return [
-    { round: 1206, date: '2026-01-11', numbers: [6, 14, 22, 27, 35, 42], bonus: 18 },
-    { round: 1205, date: '2026-01-04', numbers: [3, 11, 19, 28, 33, 41], bonus: 7 },
-    { round: 1204, date: '2025-12-28', numbers: [8, 15, 23, 31, 38, 45], bonus: 12 },
-    { round: 1203, date: '2025-12-21', numbers: [2, 9, 17, 26, 34, 43], bonus: 21 },
-    { round: 1202, date: '2025-12-14', numbers: [5, 13, 20, 29, 36, 40], bonus: 4 },
+    // 2024년 12월 실제 당첨번호
+    { round: 1152, date: '2024-12-28', numbers: [30, 31, 32, 35, 36, 37], bonus: 19 },
+    { round: 1151, date: '2024-12-21', numbers: [2, 3, 9, 15, 27, 29], bonus: 8 },
+    { round: 1150, date: '2024-12-14', numbers: [8, 9, 18, 35, 39, 45], bonus: 25 },
+    { round: 1149, date: '2024-12-07', numbers: [8, 15, 19, 21, 32, 36], bonus: 38 },
+    // 2024년 11월
+    { round: 1148, date: '2024-11-30', numbers: [3, 6, 13, 15, 16, 22], bonus: 32 },
+    { round: 1147, date: '2024-11-23', numbers: [7, 11, 24, 26, 27, 37], bonus: 32 },
+    { round: 1146, date: '2024-11-16', numbers: [6, 11, 17, 19, 40, 43], bonus: 28 },
+    { round: 1145, date: '2024-11-09', numbers: [2, 11, 31, 33, 37, 44], bonus: 32 },
+    { round: 1144, date: '2024-11-02', numbers: [5, 15, 17, 25, 28, 34], bonus: 40 },
+    // 2024년 10월
+    { round: 1143, date: '2024-10-26', numbers: [10, 16, 17, 27, 28, 36], bonus: 6 },
   ];
 }
 
@@ -110,9 +118,14 @@ let syncDraws: LotteryDraw[] = getDefaultDraws();
 
 // 데이터 초기화 (앱 시작 시 호출)
 export async function initializeLotteryData(): Promise<void> {
-  const draws = await fetchRecentDraws(10);
-  if (draws.length > 0) {
-    syncDraws = draws;
+  try {
+    const draws = await fetchRecentDraws(10);
+    if (draws.length > 0 && draws[0].round > 1000) {
+      syncDraws = draws;
+    }
+  } catch (error) {
+    console.log('API 연결 실패, 기본 데이터 사용');
+    syncDraws = getDefaultDraws();
   }
 }
 
