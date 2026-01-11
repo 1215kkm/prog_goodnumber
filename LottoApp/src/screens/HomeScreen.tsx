@@ -1,14 +1,29 @@
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import {
   View,
   Text,
   StyleSheet,
   ScrollView,
   TouchableOpacity,
+  ActivityIndicator,
 } from 'react-native';
-import { getHotNumbers, getColdNumbers, getDaysUntilDraw, getNextRound, getRecentDraws } from '../services/lotteryService';
+import { getHotNumbers, getColdNumbers, getDaysUntilDraw, getNextRound, getRecentDraws, initializeLotteryData } from '../services/lotteryService';
 
 export default function HomeScreen({ navigation }: any) {
+  const [isLoading, setIsLoading] = useState(true);
+  const [refreshKey, setRefreshKey] = useState(0);
+
+  useEffect(() => {
+    loadData();
+  }, []);
+
+  const loadData = async () => {
+    setIsLoading(true);
+    await initializeLotteryData();
+    setRefreshKey(prev => prev + 1);
+    setIsLoading(false);
+  };
+
   const hotNumbers = getHotNumbers(6);
   const coldNumbers = getColdNumbers(6);
   const daysUntil = getDaysUntilDraw();
@@ -33,12 +48,21 @@ export default function HomeScreen({ navigation }: any) {
     );
   };
 
+  if (isLoading) {
+    return (
+      <View style={styles.loadingContainer}>
+        <ActivityIndicator size="large" color="#ff6b35" />
+        <Text style={styles.loadingText}>최신 데이터 불러오는 중...</Text>
+      </View>
+    );
+  }
+
   return (
     <ScrollView style={styles.container}>
       {/* 헤더 */}
       <View style={styles.header}>
         <Text style={styles.title}>🎱 로또 분석기</Text>
-        <Text style={styles.subtitle}>AI 기반 번호 추천</Text>
+        <Text style={styles.subtitle}>동행복권 실시간 데이터</Text>
       </View>
 
       {/* 긴급 배너 */}
@@ -249,5 +273,16 @@ const styles = StyleSheet.create({
   },
   footer: {
     height: 30,
+  },
+  loadingContainer: {
+    flex: 1,
+    backgroundColor: '#1a1a2e',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  loadingText: {
+    color: '#ffffff',
+    marginTop: 15,
+    fontSize: 16,
   },
 });
