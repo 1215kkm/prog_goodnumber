@@ -118,15 +118,9 @@ let syncDraws: LotteryDraw[] = getDefaultDraws();
 
 // 데이터 초기화 (앱 시작 시 호출)
 export async function initializeLotteryData(): Promise<void> {
-  try {
-    const draws = await fetchRecentDraws(10);
-    if (draws.length > 0 && draws[0].round > 1000) {
-      syncDraws = draws;
-    }
-  } catch (error) {
-    console.log('API 연결 실패, 기본 데이터 사용');
-    syncDraws = getDefaultDraws();
-  }
+  // 앱에서는 CORS 제한으로 API 직접 호출 불가
+  // 기본 데이터(실제 2024년 당첨번호) 사용
+  syncDraws = getDefaultDraws();
 }
 
 // 번호별 출현 빈도 계산
