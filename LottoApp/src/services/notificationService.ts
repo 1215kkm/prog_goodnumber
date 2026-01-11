@@ -91,14 +91,13 @@ export async function scheduleWeeklyNotification(settings: NotificationSettings)
       title: `🎱 ${nextRound}회 로또 추천번호`,
       body: `이번 주 핫넘버: ${hotNumbers.join(', ')}`,
       data: { type: 'weekly_recommendation' },
-      sound: true,
     },
     trigger: {
+      type: Notifications.SchedulableTriggerInputTypes.WEEKLY,
       weekday: settings.dayOfWeek + 1, // Expo는 1=일요일
       hour: settings.hour,
       minute: settings.minute,
-      repeats: true,
-    } as any,
+    },
   });
 
   console.log(`알림 예약: 매주 ${getDayName(settings.dayOfWeek)} ${settings.hour}:${settings.minute.toString().padStart(2, '0')}`);
@@ -114,9 +113,9 @@ export async function sendTestNotification(): Promise<void> {
       title: `🎱 ${nextRound}회 로또 추천번호 (테스트)`,
       body: `이번 주 핫넘버: ${hotNumbers.join(', ')}`,
       data: { type: 'test' },
-      sound: true,
     },
     trigger: {
+      type: Notifications.SchedulableTriggerInputTypes.TIME_INTERVAL,
       seconds: 3,
     },
   });
