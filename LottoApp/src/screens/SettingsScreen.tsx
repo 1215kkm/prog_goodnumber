@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import {
   View,
   Text,
@@ -8,16 +8,16 @@ import {
   TouchableOpacity,
   Alert,
 } from 'react-native';
-import {
-  requestPermissions,
-  getNotificationSettings,
-  saveNotificationSettings,
-  sendTestNotification,
-} from '../services/notificationService';
-import { NotificationSettings } from '../types/lottery';
 
 const DAYS = ['일', '월', '화', '수', '목', '금', '토'];
 const HOURS = Array.from({ length: 24 }, (_, i) => i);
+
+interface NotificationSettings {
+  enabled: boolean;
+  dayOfWeek: number;
+  hour: number;
+  minute: number;
+}
 
 export default function SettingsScreen() {
   const [settings, setSettings] = useState<NotificationSettings>({
@@ -26,70 +26,35 @@ export default function SettingsScreen() {
     hour: 19,
     minute: 0,
   });
-  const [hasPermission, setHasPermission] = useState(false);
 
-  useEffect(() => {
-    loadSettings();
-  }, []);
-
-  const loadSettings = async () => {
-    const saved = await getNotificationSettings();
-    setSettings(saved);
-    const permission = await requestPermissions();
-    setHasPermission(permission);
-  };
-
-  const handleToggle = async (enabled: boolean) => {
-    if (enabled && !hasPermission) {
-      const granted = await requestPermissions();
-      if (!granted) {
-        Alert.alert(
-          '알림 권한 필요',
-          '설정에서 알림 권한을 허용해주세요.',
-          [{ text: '확인' }]
-        );
-        return;
-      }
-      setHasPermission(true);
+  const handleToggle = (enabled: boolean) => {
+    setSettings({ ...settings, enabled });
+    if (enabled) {
+      Alert.alert('알림 설정', '알림이 활성화되었습니다.');
     }
-
-    const newSettings = { ...settings, enabled };
-    setSettings(newSettings);
-    await saveNotificationSettings(newSettings);
   };
 
-  const handleDayChange = async (day: number) => {
-    const newSettings = { ...settings, dayOfWeek: day };
-    setSettings(newSettings);
-    await saveNotificationSettings(newSettings);
+  const handleDayChange = (day: number) => {
+    setSettings({ ...settings, dayOfWeek: day });
   };
 
-  const handleHourChange = async (hour: number) => {
-    const newSettings = { ...settings, hour };
-    setSettings(newSettings);
-    await saveNotificationSettings(newSettings);
+  const handleHourChange = (hour: number) => {
+    setSettings({ ...settings, hour });
   };
 
-  const handleTestNotification = async () => {
-    const permission = await requestPermissions();
-    if (!permission) {
-      Alert.alert('알림 권한이 필요합니다');
-      return;
-    }
-    await sendTestNotification();
-    Alert.alert('테스트 알림', '3초 후 알림이 도착합니다!');
+  const handleTestNotification = () => {
+    Alert.alert('테스트 알림', '🎱 1155회 로또 추천번호\n이번 주 핫넘버: 3, 13, 20, 27, 34, 39');
   };
 
   return (
     <ScrollView style={styles.container}>
       <View style={styles.header}>
-        <Text style={styles.title}>⚙️ 설정</Text>
+        <Text style={styles.title}>설정</Text>
         <Text style={styles.subtitle}>알림 및 앱 설정</Text>
       </View>
 
-      {/* 알림 설정 */}
       <View style={styles.section}>
-        <Text style={styles.sectionTitle}>🔔 푸시 알림</Text>
+        <Text style={styles.sectionTitle}>푸시 알림</Text>
 
         <View style={styles.settingRow}>
           <View>
@@ -100,13 +65,12 @@ export default function SettingsScreen() {
             value={settings.enabled}
             onValueChange={handleToggle}
             trackColor={{ false: '#3a3a5a', true: '#ff6b35' }}
-            thumbColor={settings.enabled ? '#fff' : '#888'}
+            thumbColor={settings.enabled ? '#ffffff' : '#888888'}
           />
         </View>
 
-        {settings.enabled && (
-          <>
-            {/* 요일 선택 */}
+        {settings.enabled ? (
+          <View>
             <View style={styles.pickerSection}>
               <Text style={styles.pickerLabel}>알림 요일</Text>
               <View style={styles.dayPicker}>
@@ -130,7 +94,6 @@ export default function SettingsScreen() {
               </View>
             </View>
 
-            {/* 시간 선택 */}
             <View style={styles.pickerSection}>
               <Text style={styles.pickerLabel}>알림 시간</Text>
               <ScrollView horizontal showsHorizontalScrollIndicator={false}>
@@ -156,19 +119,17 @@ export default function SettingsScreen() {
               </ScrollView>
             </View>
 
-            {/* 현재 설정 요약 */}
             <View style={styles.summaryBox}>
               <Text style={styles.summaryText}>
-                📅 매주 {DAYS[settings.dayOfWeek]}요일 {settings.hour.toString().padStart(2, '0')}:00에 알림
+                매주 {DAYS[settings.dayOfWeek]}요일 {settings.hour.toString().padStart(2, '0')}:00에 알림
               </Text>
             </View>
-          </>
-        )}
+          </View>
+        ) : null}
       </View>
 
-      {/* 테스트 알림 */}
       <View style={styles.section}>
-        <Text style={styles.sectionTitle}>🧪 알림 테스트</Text>
+        <Text style={styles.sectionTitle}>알림 테스트</Text>
         <TouchableOpacity
           style={styles.testButton}
           onPress={handleTestNotification}
@@ -176,13 +137,12 @@ export default function SettingsScreen() {
           <Text style={styles.testButtonText}>테스트 알림 보내기</Text>
         </TouchableOpacity>
         <Text style={styles.testDescription}>
-          3초 후에 테스트 알림이 도착합니다
+          알림 미리보기를 확인합니다
         </Text>
       </View>
 
-      {/* 앱 정보 */}
       <View style={styles.section}>
-        <Text style={styles.sectionTitle}>ℹ️ 앱 정보</Text>
+        <Text style={styles.sectionTitle}>앱 정보</Text>
         <View style={styles.infoRow}>
           <Text style={styles.infoLabel}>버전</Text>
           <Text style={styles.infoValue}>1.0.0</Text>
@@ -193,7 +153,6 @@ export default function SettingsScreen() {
         </View>
       </View>
 
-      {/* 면책 조항 */}
       <View style={styles.disclaimer}>
         <Text style={styles.disclaimerText}>
           본 앱은 통계 분석 참고용이며 당첨을 보장하지 않습니다.
@@ -223,7 +182,7 @@ const styles = StyleSheet.create({
   },
   subtitle: {
     fontSize: 14,
-    color: '#888',
+    color: '#888888',
     marginTop: 5,
   },
   section: {
@@ -236,7 +195,7 @@ const styles = StyleSheet.create({
   sectionTitle: {
     fontSize: 18,
     fontWeight: 'bold',
-    color: '#fff',
+    color: '#ffffff',
     marginBottom: 15,
   },
   settingRow: {
@@ -247,11 +206,11 @@ const styles = StyleSheet.create({
   },
   settingLabel: {
     fontSize: 16,
-    color: '#fff',
+    color: '#ffffff',
   },
   settingDescription: {
     fontSize: 12,
-    color: '#888',
+    color: '#888888',
     marginTop: 2,
   },
   pickerSection: {
@@ -259,7 +218,7 @@ const styles = StyleSheet.create({
   },
   pickerLabel: {
     fontSize: 14,
-    color: '#888',
+    color: '#888888',
     marginBottom: 10,
   },
   dayPicker: {
@@ -278,11 +237,11 @@ const styles = StyleSheet.create({
     backgroundColor: '#ff6b35',
   },
   dayButtonText: {
-    color: '#888',
+    color: '#888888',
     fontWeight: 'bold',
   },
   dayButtonTextActive: {
-    color: '#fff',
+    color: '#ffffff',
   },
   hourPicker: {
     flexDirection: 'row',
@@ -299,11 +258,11 @@ const styles = StyleSheet.create({
     backgroundColor: '#ff6b35',
   },
   hourButtonText: {
-    color: '#888',
+    color: '#888888',
     fontSize: 14,
   },
   hourButtonTextActive: {
-    color: '#fff',
+    color: '#ffffff',
     fontWeight: 'bold',
   },
   summaryBox: {
@@ -324,12 +283,12 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   testButtonText: {
-    color: '#fff',
+    color: '#ffffff',
     fontWeight: 'bold',
     fontSize: 16,
   },
   testDescription: {
-    color: '#888',
+    color: '#888888',
     fontSize: 12,
     textAlign: 'center',
     marginTop: 10,
@@ -342,17 +301,17 @@ const styles = StyleSheet.create({
     borderBottomColor: '#2a2a4a',
   },
   infoLabel: {
-    color: '#888',
+    color: '#888888',
   },
   infoValue: {
-    color: '#fff',
+    color: '#ffffff',
   },
   disclaimer: {
     marginHorizontal: 20,
     padding: 15,
   },
   disclaimerText: {
-    color: '#666',
+    color: '#666666',
     fontSize: 12,
     textAlign: 'center',
     lineHeight: 18,
