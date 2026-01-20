@@ -54,30 +54,22 @@
                                 <tbody>
                                     @foreach (var rec in recommendations)
                                     {
-                                        var (matchCount, bonusMatch) = RecommendationService.CompareWithActual(rec.Numbers, result);
-                                        var matchColor = matchCount >= 3 ? "#4CAF50" : (matchCount >= 2 ? "#ff9800" : "#666");
+                                        var matchResult = CompareNumbers(rec.Numbers, result);
                                         <tr style="border-bottom: 1px solid #222;">
                                             <td style="padding: 10px 8px; color: #ccc; font-size: 12px;">@rec.RecommendationType</td>
                                             <td style="padding: 10px 8px; text-align: center;">
                                                 <div style="display: flex; justify-content: center; gap: 4px; flex-wrap: wrap;">
                                                     @foreach (var num in rec.Numbers)
                                                     {
-                                                        var isMatch = result.Numbers.Contains(num);
-                                                        var isBonusMatch = num == result.BonusNumber;
-                                                        <span style="display: inline-block; width: 28px; height: 28px; line-height: 28px; text-align: center; border-radius: 50%; font-size: 12px; font-weight: bold;
-                                                            background: @(isMatch ? "#4CAF50" : (isBonusMatch ? "#ff6b35" : "#333"));
-                                                            color: @(isMatch || isBonusMatch ? "#fff" : "#888");
-                                                            border: @(isMatch ? "2px solid #69F0AE" : (isBonusMatch ? "2px solid #ff8a65" : "1px solid #444"));">
-                                                            @num
-                                                        </span>
+                                                        <span class="@GetBallClass(num, result)">@num</span>
                                                     }
                                                 </div>
                                             </td>
                                             <td style="padding: 10px 8px; text-align: center;">
-                                                <span style="color: @matchColor; font-weight: bold; font-size: 16px;">
-                                                    @matchCount개
+                                                <span class="@GetMatchColorClass(matchResult.MatchCount)" style="font-weight: bold; font-size: 16px;">
+                                                    @(matchResult.MatchCount)개
                                                 </span>
-                                                @if (bonusMatch)
+                                                @if (matchResult.BonusMatch)
                                                 {
                                                     <span style="color: #ff6b35; font-size: 11px; display: block;">+보너스</span>
                                                 }
@@ -90,11 +82,7 @@
 
                         <!-- 최고 적중 결과 요약 -->
                         @{
-                            var bestMatch = recommendations
-                                .Select(r => RecommendationService.CompareWithActual(r.Numbers, result))
-                                .OrderByDescending(m => m.MatchCount)
-                                .ThenByDescending(m => m.BonusMatch)
-                                .First();
+                            var bestMatch = GetBestMatch(recommendations, result);
                         }
                         @if (bestMatch.MatchCount >= 3)
                         {
@@ -151,6 +139,51 @@
     </div>
 </div>
 
+<style>
+    .match-ball {
+        display: inline-block;
+        width: 28px;
+        height: 28px;
+        line-height: 28px;
+        text-align: center;
+        border-radius: 50%;
+        font-size: 12px;
+        font-weight: bold;
+        background: #4CAF50;
+        color: #fff;
+        border: 2px solid #69F0AE;
+    }
+    .bonus-ball {
+        display: inline-block;
+        width: 28px;
+        height: 28px;
+        line-height: 28px;
+        text-align: center;
+        border-radius: 50%;
+        font-size: 12px;
+        font-weight: bold;
+        background: #ff6b35;
+        color: #fff;
+        border: 2px solid #ff8a65;
+    }
+    .miss-ball {
+        display: inline-block;
+        width: 28px;
+        height: 28px;
+        line-height: 28px;
+        text-align: center;
+        border-radius: 50%;
+        font-size: 12px;
+        font-weight: bold;
+        background: #333;
+        color: #888;
+        border: 1px solid #444;
+    }
+    .match-high { color: #4CAF50; }
+    .match-mid { color: #ff9800; }
+    .match-low { color: #666; }
+</style>
+
 @code {
     [Inject] public LottoDataService DataService { get; set; } = default!;
     [Inject] public RecommendationService RecommendationService { get; set; } = default!;
@@ -181,5 +214,36 @@
     private List<RecommendedNumbers> GetRecommendations(int round)
     {
         return RecommendationsCache.TryGetValue(round, out var recs) ? recs : new List<RecommendedNumbers>();
+    }
+
+    private (int MatchCount, bool BonusMatch) CompareNumbers(int[] recommended, LottoResult actual)
+    {
+        int matchCount = recommended.Count(r => actual.Numbers.Contains(r));
+        bool bonusMatch = recommended.Contains(actual.BonusNumber);
+        return (matchCount, bonusMatch);
+    }
+
+    private (int MatchCount, bool BonusMatch) GetBestMatch(List<RecommendedNumbers> recommendations, LottoResult result)
+    {
+        var best = recommendations
+            .Select(r => CompareNumbers(r.Numbers, result))
+            .OrderByDescending(m => m.MatchCount)
+            .ThenByDescending(m => m.BonusMatch)
+            .FirstOrDefault();
+        return best;
+    }
+
+    private string GetBallClass(int num, LottoResult result)
+    {
+        if (result.Numbers.Contains(num)) return "match-ball";
+        if (num == result.BonusNumber) return "bonus-ball";
+        return "miss-ball";
+    }
+
+    private string GetMatchColorClass(int matchCount)
+    {
+        if (matchCount >= 3) return "match-high";
+        if (matchCount >= 2) return "match-mid";
+        return "match-low";
     }
 }
