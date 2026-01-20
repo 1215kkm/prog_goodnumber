@@ -48,6 +48,30 @@
     </div>
 </section>
 
+<!-- 최근 당첨번호 -->
+@if (LatestResult != null)
+{
+    <section class="latest-result-section" style="background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%); padding: 30px 0;">
+        <div class="container" style="text-align: center;">
+            <h2 style="color: #fff; margin-bottom: 20px; font-size: 1.5rem;">
+                🎰 최근 당첨번호 <span style="color: #ff6b35;">@(LatestResult.Round)회</span>
+            </h2>
+            <p style="color: #888; margin-bottom: 15px;">@(LatestResult.DrawDate.ToString("yyyy년 M월 d일")) 추첨</p>
+            <div style="display: flex; justify-content: center; align-items: center; gap: 8px; flex-wrap: wrap;">
+                @foreach (var num in LatestResult.Numbers)
+                {
+                    <LottoBall Number="@num" />
+                }
+                <span style="color: #888; font-size: 1.5rem; margin: 0 5px;">+</span>
+                <div style="position: relative;">
+                    <LottoBall Number="@LatestResult.BonusNumber" />
+                    <span style="position: absolute; bottom: -20px; left: 50%; transform: translateX(-50%); font-size: 11px; color: #ff6b35;">보너스</span>
+                </div>
+            </div>
+        </div>
+    </section>
+}
+
 <!-- Pain Point Section -->
 <section class="pain-section">
     <div class="container">
@@ -219,15 +243,19 @@
 
 @code {
     private int[] HotPreviewNumbers = { 34, 17, 27, 12, 45 };
+    private LottoResult? LatestResult;
 
     protected override void OnInitialized()
     {
-        // 실제 데이터에서 핫넘버 가져오기
+        // 실제 데이터에서 핫넘버와 최근 당첨번호 가져오기
         try
         {
             var results = DataService.GetSampleData();
             var hotNumbers = StatisticsService.AnalyzeHotNumbers(results, 30);
             HotPreviewNumbers = hotNumbers.Take(5).Select(h => h.Number).ToArray();
+
+            // 최근 당첨번호
+            LatestResult = results.OrderByDescending(r => r.Round).FirstOrDefault();
         }
         catch { }
     }
