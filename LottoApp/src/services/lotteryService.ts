@@ -312,6 +312,12 @@ export async function initializeLotteryData(): Promise<void> {
 
 // 번호별 출현 빈도 계산
 export function getNumberFrequencies(): NumberFrequency[] {
+  return getNumberFrequenciesByYears(10); // 기본값 전체 10년
+}
+
+// 연도별 번호 출현 빈도 계산
+export function getNumberFrequenciesByYears(years: number = 5): NumberFrequency[] {
+  const draws = getDrawsByYears(years);
   const frequencyMap = new Map<number, number>();
 
   // 1-45 모든 번호 초기화
@@ -320,13 +326,13 @@ export function getNumberFrequencies(): NumberFrequency[] {
   }
 
   // 빈도 계산
-  syncDraws.forEach(draw => {
+  draws.forEach(draw => {
     draw.numbers.forEach(num => {
       frequencyMap.set(num, (frequencyMap.get(num) || 0) + 1);
     });
   });
 
-  const totalDraws = syncDraws.length;
+  const totalDraws = draws.length;
   const frequencies: NumberFrequency[] = [];
 
   frequencyMap.forEach((freq, num) => {
@@ -338,6 +344,11 @@ export function getNumberFrequencies(): NumberFrequency[] {
   });
 
   return frequencies.sort((a, b) => b.frequency - a.frequency);
+}
+
+// 연도별 총 회차 수 반환
+export function getTotalDrawsByYears(years: number): number {
+  return getDrawsByYears(years).length;
 }
 
 // 핫 넘버 (자주 나오는 번호)
