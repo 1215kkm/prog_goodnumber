@@ -1,14 +1,18 @@
-import React from 'react';
+import React, { useState } from 'react';
 import {
   View,
   Text,
   StyleSheet,
   ScrollView,
+  TouchableOpacity,
 } from 'react-native';
-import { getNumberFrequencies } from '../services/lotteryService';
+import { getNumberFrequenciesByYears, getTotalDrawsByYears } from '../services/lotteryService';
 
 export default function StatisticsScreen() {
-  const frequencies = getNumberFrequencies();
+  const [selectedYears, setSelectedYears] = useState(5);
+
+  const frequencies = getNumberFrequenciesByYears(selectedYears);
+  const totalDraws = getTotalDrawsByYears(selectedYears);
 
   const renderFrequencyBar = (freq: { number: number; frequency: number; percentage: number }) => {
     const maxFreq = frequencies[0].frequency;
@@ -35,7 +39,31 @@ export default function StatisticsScreen() {
     <ScrollView style={styles.container}>
       <View style={styles.header}>
         <Text style={styles.title}>📊 번호 출현 통계</Text>
-        <Text style={styles.subtitle}>최근 10회차 분석 결과</Text>
+        <Text style={styles.subtitle}>{selectedYears}년치 ({totalDraws}회) 분석 결과</Text>
+      </View>
+
+      {/* 분석 기간 선택 */}
+      <View style={styles.yearSelector}>
+        <Text style={styles.yearLabel}>분석 기간:</Text>
+        <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.yearButtons}>
+          {[1, 2, 3, 4, 5, 6, 7, 8, 9, 10].map(year => (
+            <TouchableOpacity
+              key={year}
+              style={[
+                styles.yearButton,
+                selectedYears === year && styles.yearButtonActive
+              ]}
+              onPress={() => setSelectedYears(year)}
+            >
+              <Text style={[
+                styles.yearButtonText,
+                selectedYears === year && styles.yearButtonTextActive
+              ]}>
+                {year}년
+              </Text>
+            </TouchableOpacity>
+          ))}
+        </ScrollView>
       </View>
 
       {/* 핫 넘버 TOP 10 */}
@@ -53,28 +81,6 @@ export default function StatisticsScreen() {
       {/* 전체 번호 빈도 */}
       <View style={styles.section}>
         <Text style={styles.sectionTitle}>📈 전체 번호 빈도표</Text>
-        <View style={styles.gridContainer}>
-          {[1, 2, 3, 4, 5].map(row => (
-            <View key={row} style={styles.gridRow}>
-              {frequencies
-                .filter(f => Math.ceil(f.number / 9) === row || (row === 5 && f.number > 36))
-                .slice(0, 9)
-                .map(freq => {
-                  const num = (row - 1) * 9 + frequencies.filter(f => Math.ceil(f.number / 9) === row).indexOf(freq) + 1;
-                  const actualFreq = frequencies.find(f => f.number === num);
-                  if (!actualFreq) return null;
-                  return (
-                    <View key={actualFreq.number} style={styles.gridCell}>
-                      <View style={[styles.gridBall, { backgroundColor: getBallColor(actualFreq.number) }]}>
-                        <Text style={styles.gridBallText}>{actualFreq.number}</Text>
-                      </View>
-                      <Text style={styles.gridFreq}>{actualFreq.frequency}회</Text>
-                    </View>
-                  );
-                })}
-            </View>
-          ))}
-        </View>
 
         {/* 간단한 그리드 */}
         <View style={styles.simpleGrid}>
@@ -82,7 +88,7 @@ export default function StatisticsScreen() {
             const freq = frequencies.find(f => f.number === num);
             return (
               <View key={num} style={styles.simpleCell}>
-                <View style={[styles.simpleBall, { backgroundColor: getBallColor(num), opacity: freq ? 0.4 + (freq.frequency * 0.2) : 0.4 }]}>
+                <View style={[styles.simpleBall, { backgroundColor: getBallColor(num), opacity: freq ? 0.4 + (freq.frequency * 0.015) : 0.4 }]}>
                   <Text style={styles.simpleBallText}>{num}</Text>
                 </View>
                 <Text style={styles.simpleFreq}>{freq?.frequency || 0}</Text>
@@ -124,6 +130,38 @@ const styles = StyleSheet.create({
     fontSize: 14,
     color: '#888',
     marginTop: 5,
+  },
+  yearSelector: {
+    backgroundColor: '#16213e',
+    marginHorizontal: 20,
+    marginBottom: 20,
+    padding: 15,
+    borderRadius: 15,
+  },
+  yearLabel: {
+    color: '#fff',
+    fontWeight: 'bold',
+    marginBottom: 10,
+  },
+  yearButtons: {
+    flexDirection: 'row',
+  },
+  yearButton: {
+    paddingHorizontal: 16,
+    paddingVertical: 10,
+    marginRight: 8,
+    borderRadius: 20,
+    backgroundColor: '#2a2a4a',
+  },
+  yearButtonActive: {
+    backgroundColor: '#ff6b35',
+  },
+  yearButtonText: {
+    color: '#888',
+    fontWeight: 'bold',
+  },
+  yearButtonTextActive: {
+    color: '#fff',
   },
   section: {
     backgroundColor: '#16213e',
@@ -173,34 +211,6 @@ const styles = StyleSheet.create({
     color: '#888',
     width: 40,
     textAlign: 'right',
-  },
-  gridContainer: {
-    marginTop: 10,
-  },
-  gridRow: {
-    flexDirection: 'row',
-    justifyContent: 'space-around',
-    marginBottom: 10,
-  },
-  gridCell: {
-    alignItems: 'center',
-  },
-  gridBall: {
-    width: 30,
-    height: 30,
-    borderRadius: 15,
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  gridBallText: {
-    color: '#fff',
-    fontWeight: 'bold',
-    fontSize: 12,
-  },
-  gridFreq: {
-    color: '#888',
-    fontSize: 10,
-    marginTop: 2,
   },
   simpleGrid: {
     flexDirection: 'row',

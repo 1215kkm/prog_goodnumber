@@ -62,7 +62,7 @@ export default function HomeScreen({ navigation }: any) {
       {/* 헤더 */}
       <View style={styles.header}>
         <Text style={styles.title}>🎱 로또 분석기</Text>
-        <Text style={styles.subtitle}>동행복권 실시간 데이터</Text>
+        <Text style={styles.subtitle}>10년간 520회+ 당첨 데이터 분석</Text>
       </View>
 
       {/* 긴급 배너 */}
