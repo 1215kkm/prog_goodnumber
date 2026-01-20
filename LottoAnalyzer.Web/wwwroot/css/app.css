@@ -1353,12 +1353,24 @@ tr:hover {
 
 @media (max-width: 768px) {
     .sticky-latest-result {
-        top: 50px;
+        top: 58px;
         padding: 8px 0;
     }
     .sticky-latest-result .ball.small {
-        width: 28px;
-        height: 28px;
-        font-size: 12px;
+        width: 26px;
+        height: 26px;
+        font-size: 11px;
+    }
+}
+
+@media (max-width: 480px) {
+    .sticky-latest-result {
+        top: 55px;
+        padding: 6px 0;
+    }
+    .sticky-latest-result .ball.small {
+        width: 24px;
+        height: 24px;
+        font-size: 10px;
     }
 }
