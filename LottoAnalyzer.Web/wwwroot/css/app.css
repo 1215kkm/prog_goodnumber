@@ -115,13 +115,13 @@ main {
 }
 
 .ball.highlight {
-    box-shadow: 0 0 0 3px #fff, 0 0 0 6px #ff6b35;
+    box-shadow: 0 0 0 3px #fff, 0 0 0 6px #000;
     animation: pulse-highlight 1.5s ease-in-out infinite;
 }
 
 @keyframes pulse-highlight {
-    0%, 100% { box-shadow: 0 0 0 3px #fff, 0 0 0 6px #ff6b35; }
-    50% { box-shadow: 0 0 0 3px #fff, 0 0 0 8px #ff6b35; }
+    0%, 100% { box-shadow: 0 0 0 3px #fff, 0 0 0 6px #000; }
+    50% { box-shadow: 0 0 0 3px #fff, 0 0 0 8px #000; }
 }
 
 .yellow, .ball-yellow { background: linear-gradient(135deg, #FBC400 0%, #f39c12 100%); }
@@ -1365,7 +1365,7 @@ tr:hover {
 
 @media (max-width: 480px) {
     .sticky-latest-result {
-        top: 55px;
+        top: 87px;
         padding: 6px 0;
     }
     .sticky-latest-result .ball.small {
