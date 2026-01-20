@@ -1,0 +1,61 @@
+@page "/history"
+
+<PageTitle>당첨확인 - 로또 분석기</PageTitle>
+
+<div class="container">
+    <h1 style="margin-bottom: 10px;">당첨번호 확인</h1>
+    <p style="color: #666; margin-bottom: 30px;">
+        최근 20회차 당첨번호를 확인하세요.
+    </p>
+
+    <div class="history-list">
+        @foreach (var result in RecentResults)
+        {
+            <div class="history-card" style="background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%); border-radius: 15px; padding: 20px; margin-bottom: 15px;">
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px;">
+                    <div>
+                        <span style="color: #ff6b35; font-size: 1.3rem; font-weight: bold;">@(result.Round)회</span>
+                        <span style="color: #888; margin-left: 10px;">@(result.DrawDate.ToString("yyyy.MM.dd"))</span>
+                    </div>
+                </div>
+                <div style="display: flex; align-items: center; gap: 8px; flex-wrap: wrap;">
+                    @foreach (var num in result.Numbers)
+                    {
+                        <LottoBall Number="@num" />
+                    }
+                    <span style="color: #888; font-size: 1.5rem; margin: 0 5px;">+</span>
+                    <div style="position: relative;">
+                        <LottoBall Number="@result.BonusNumber" />
+                        <span style="position: absolute; bottom: -18px; left: 50%; transform: translateX(-50%); font-size: 10px; color: #ff6b35;">보너스</span>
+                    </div>
+                </div>
+            </div>
+        }
+    </div>
+
+    @if (RecentResults.Count == 0)
+    {
+        <div class="card" style="text-align: center; padding: 40px;">
+            <p style="color: #666;">데이터를 불러오는 중...</p>
+        </div>
+    }
+</div>
+
+@code {
+    [Inject] public LottoDataService DataService { get; set; } = default!;
+
+    private List<LottoResult> RecentResults = new();
+
+    protected override void OnInitialized()
+    {
+        try
+        {
+            var allResults = DataService.GetSampleData();
+            RecentResults = allResults
+                .OrderByDescending(r => r.Round)
+                .Take(20)
+                .ToList();
+        }
+        catch { }
+    }
+}
