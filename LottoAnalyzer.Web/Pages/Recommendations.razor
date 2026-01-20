@@ -9,6 +9,22 @@
         <strong>매번 다른 조합</strong>이 생성됩니다.
     </p>
 
+    <!-- 분석 기간 선택 -->
+    <div class="card" style="margin-bottom: 20px; padding: 15px;">
+        <div style="display: flex; align-items: center; gap: 15px; flex-wrap: wrap;">
+            <label style="font-weight: bold;">분석 기간:</label>
+            <select @bind="SelectedYears" style="padding: 8px 15px; border-radius: 6px; border: 1px solid #ddd;">
+                @for (int i = 1; i <= 10; i++)
+                {
+                    <option value="@i">@(i)년치 (@(i * 52)회)</option>
+                }
+            </select>
+            <span style="color: #666; font-size: 14px;">
+                * 짧은 기간: 최신 트렌드 반영 / 긴 기간: 장기 패턴 분석
+            </span>
+        </div>
+    </div>
+
     <div style="margin-bottom: 20px;">
         <button class="btn btn-primary" @onclick="GenerateRecommendations">
             @if (IsLoading)
@@ -24,6 +40,10 @@
 
     @if (RecommendationList.Any())
     {
+        <div style="margin-bottom: 15px; color: #666;">
+            <strong>@(SelectedYears)년치 데이터 (@(TotalResultCount)회) 기반 분석 결과</strong>
+        </div>
+
         <div class="grid grid-2">
             @foreach (var rec in RecommendationList)
             {
@@ -53,6 +73,8 @@
 
     private bool IsLoading = false;
     private List<RecommendedNumbers> RecommendationList = new();
+    private int SelectedYears = 5;
+    private int TotalResultCount = 0;
 
     private void GenerateRecommendations()
     {
@@ -61,7 +83,8 @@
 
         try
         {
-            var allResults = DataService.GetSampleData();
+            var allResults = DataService.GetSampleData(SelectedYears);
+            TotalResultCount = allResults.Count;
             RecommendationList = RecommendationService.GenerateRecommendations(allResults);
         }
         finally
