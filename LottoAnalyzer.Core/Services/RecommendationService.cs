@@ -514,5 +514,214 @@ namespace LottoAnalyzer.Core.Services
                 _ => Season.Winter
             };
         }
+
+        /// <summary>
+        /// 과거 회차에 대한 시뮬레이션 추천 (해당 회차 이전 데이터만 사용)
+        /// 회차 번호를 시드로 사용해서 일관된 결과 생성
+        /// </summary>
+        public List<RecommendedNumbers> GenerateHistoricalRecommendations(List<LottoResult> allResults, int targetRound)
+        {
+            // 해당 회차 이전 데이터만 사용
+            var pastResults = allResults.Where(r => r.Round < targetRound).ToList();
+
+            if (pastResults.Count < 50)
+            {
+                // 데이터가 너무 적으면 빈 리스트 반환
+                return new List<RecommendedNumbers>();
+            }
+
+            // 회차 번호를 시드로 사용해서 일관된 랜덤 생성
+            var seededRandom = new Random(targetRound * 12345);
+
+            var recommendations = new List<RecommendedNumbers>
+            {
+                GenerateSeededAIRecommendation(pastResults, seededRandom, "AI 종합"),
+                GenerateSeededHotRecommendation(pastResults, seededRandom, "핫넘버"),
+                GenerateSeededCycleRecommendation(pastResults, seededRandom, "주기분석"),
+                GenerateSeededBalanceRecommendation(pastResults, seededRandom, "균형최적화"),
+                GenerateSeededTrendRecommendation(pastResults, seededRandom, "트렌드")
+            };
+
+            return recommendations;
+        }
+
+        /// <summary>
+        /// 추천 번호와 실제 당첨 번호 비교 (보너스 포함)
+        /// </summary>
+        public (int MatchCount, bool BonusMatch) CompareWithActual(int[] recommended, LottoResult actual)
+        {
+            int matchCount = recommended.Count(r => actual.Numbers.Contains(r));
+            bool bonusMatch = recommended.Contains(actual.BonusNumber);
+            return (matchCount, bonusMatch);
+        }
+
+        private RecommendedNumbers GenerateSeededAIRecommendation(List<LottoResult> results, Random random, string name)
+        {
+            var stats = _statisticsService.CalculateOverallStatistics(results);
+            var hotNumbers = _statisticsService.AnalyzeHotNumbers(results, 30);
+            var cycles = _statisticsService.AnalyzeNumberCycles(results);
+
+            var numberScores = new Dictionary<int, double>();
+            for (int num = 1; num <= 45; num++)
+            {
+                double score = 0;
+                var stat = stats.FirstOrDefault(s => s.Number == num);
+                if (stat != null) score += stat.Percentage * 3;
+
+                var hot = hotNumbers.FirstOrDefault(h => h.Number == num);
+                if (hot != null)
+                {
+                    int rank = hotNumbers.IndexOf(hot) + 1;
+                    score += (11 - rank) * 2.5;
+                }
+
+                var cycle = cycles.FirstOrDefault(c => c.Number == num);
+                if (cycle != null && cycle.IsOverdue) score += 15;
+
+                numberScores[num] = score + random.NextDouble() * 5; // 시드 기반 랜덤 요소
+            }
+
+            var selected = numberScores.OrderByDescending(kv => kv.Value).Take(6).Select(kv => kv.Key).OrderBy(n => n).ToArray();
+
+            return new RecommendedNumbers
+            {
+                RecommendationType = name,
+                Numbers = selected,
+                Confidence = 85
+            };
+        }
+
+        private RecommendedNumbers GenerateSeededHotRecommendation(List<LottoResult> results, Random random, string name)
+        {
+            var hotNumbers = _statisticsService.AnalyzeHotNumbers(results, 30);
+            var top15 = hotNumbers.Take(15).ToList();
+
+            var selected = top15
+                .OrderBy(_ => random.Next())
+                .Take(6)
+                .Select(h => h.Number)
+                .OrderBy(n => n)
+                .ToArray();
+
+            return new RecommendedNumbers
+            {
+                RecommendationType = name,
+                Numbers = selected,
+                Confidence = 80
+            };
+        }
+
+        private RecommendedNumbers GenerateSeededCycleRecommendation(List<LottoResult> results, Random random, string name)
+        {
+            var cycles = _statisticsService.AnalyzeNumberCycles(results);
+            var overdueNumbers = cycles.Where(c => c.IsOverdue).OrderByDescending(c => c.CurrentGap / c.AverageGap).ToList();
+
+            var selected = new List<int>();
+            foreach (var cycle in overdueNumbers.Take(8))
+            {
+                if (selected.Count >= 4) break;
+                selected.Add(cycle.Number);
+            }
+
+            var stats = _statisticsService.CalculateOverallStatistics(results);
+            foreach (var stat in stats.OrderBy(_ => random.Next()))
+            {
+                if (selected.Count >= 6) break;
+                if (!selected.Contains(stat.Number)) selected.Add(stat.Number);
+            }
+
+            return new RecommendedNumbers
+            {
+                RecommendationType = name,
+                Numbers = selected.Take(6).OrderBy(n => n).ToArray(),
+                Confidence = 75
+            };
+        }
+
+        private RecommendedNumbers GenerateSeededBalanceRecommendation(List<LottoResult> results, Random random, string name)
+        {
+            var stats = _statisticsService.CalculateOverallStatistics(results);
+
+            var ranges = new[]
+            {
+                stats.Where(s => s.Number >= 1 && s.Number <= 9).Take(3).ToList(),
+                stats.Where(s => s.Number >= 10 && s.Number <= 19).Take(3).ToList(),
+                stats.Where(s => s.Number >= 20 && s.Number <= 29).Take(3).ToList(),
+                stats.Where(s => s.Number >= 30 && s.Number <= 39).Take(3).ToList(),
+                stats.Where(s => s.Number >= 40 && s.Number <= 45).Take(2).ToList()
+            };
+
+            var selected = new List<int>();
+            foreach (var range in ranges)
+            {
+                if (range.Count > 0 && selected.Count < 5)
+                {
+                    var pick = range[random.Next(range.Count)];
+                    selected.Add(pick.Number);
+                }
+            }
+
+            var allCandidates = ranges.SelectMany(r => r).Where(s => !selected.Contains(s.Number)).ToList();
+            if (allCandidates.Count > 0)
+            {
+                selected.Add(allCandidates[random.Next(allCandidates.Count)].Number);
+            }
+
+            return new RecommendedNumbers
+            {
+                RecommendationType = name,
+                Numbers = selected.OrderBy(n => n).ToArray(),
+                Confidence = 78
+            };
+        }
+
+        private RecommendedNumbers GenerateSeededTrendRecommendation(List<LottoResult> results, Random random, string name)
+        {
+            var recent20 = results.OrderByDescending(r => r.Round).Take(20).ToList();
+            var prev20 = results.OrderByDescending(r => r.Round).Skip(20).Take(20).ToList();
+
+            var recentStats = _statisticsService.CalculateOverallStatistics(recent20);
+            var prevStats = _statisticsService.CalculateOverallStatistics(prev20);
+
+            var risingNumbers = new List<(int Number, double Rise)>();
+            for (int num = 1; num <= 45; num++)
+            {
+                var recentStat = recentStats.FirstOrDefault(s => s.Number == num);
+                var prevStat = prevStats.FirstOrDefault(s => s.Number == num);
+
+                double recentPct = recentStat?.Percentage ?? 0;
+                double prevPct = prevStat?.Percentage ?? 0;
+
+                if (recentPct > prevPct)
+                {
+                    risingNumbers.Add((num, recentPct - prevPct + random.NextDouble()));
+                }
+            }
+
+            var selected = risingNumbers
+                .OrderByDescending(r => r.Rise)
+                .Take(10)
+                .OrderBy(_ => random.Next())
+                .Take(6)
+                .Select(r => r.Number)
+                .OrderBy(n => n)
+                .ToArray();
+
+            if (selected.Length < 6)
+            {
+                var additional = recentStats
+                    .Where(s => !selected.Contains(s.Number))
+                    .Take(6 - selected.Length)
+                    .Select(s => s.Number);
+                selected = selected.Concat(additional).OrderBy(n => n).ToArray();
+            }
+
+            return new RecommendedNumbers
+            {
+                RecommendationType = name,
+                Numbers = selected,
+                Confidence = 72
+            };
+        }
     }
 }
