@@ -114,6 +114,16 @@ main {
     font-size: 12px;
 }
 
+.ball.highlight {
+    box-shadow: 0 0 0 3px #fff, 0 0 0 6px #ff6b35;
+    animation: pulse-highlight 1.5s ease-in-out infinite;
+}
+
+@keyframes pulse-highlight {
+    0%, 100% { box-shadow: 0 0 0 3px #fff, 0 0 0 6px #ff6b35; }
+    50% { box-shadow: 0 0 0 3px #fff, 0 0 0 8px #ff6b35; }
+}
+
 .yellow, .ball-yellow { background: linear-gradient(135deg, #FBC400 0%, #f39c12 100%); }
 .blue, .ball-blue { background: linear-gradient(135deg, #69C8F2 0%, #3498db 100%); }
 .red, .ball-red { background: linear-gradient(135deg, #FF7272 0%, #e74c3c 100%); }
