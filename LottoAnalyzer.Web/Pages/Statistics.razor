@@ -14,7 +14,7 @@
                 <select @bind="SelectedYears" style="padding: 10px 20px; font-size: 16px; border-radius: 8px; border: 2px solid #ddd;">
                     @for (int i = 1; i <= 10; i++)
                     {
-                        <option value="@i">@i년치 (@(i * 52)회)</option>
+                        <option value="@i">@(i)년치 (@(i * 52)회)</option>
                     }
                 </select>
             </div>
@@ -26,13 +26,13 @@
         <!-- 기간 변경 옵션 -->
         <div class="card" style="margin-bottom: 20px; padding: 15px; display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 10px;">
             <div>
-                <strong>현재 분석: @SelectedYears년치 (@TotalResultCount회)</strong>
+                <strong>현재 분석: @(SelectedYears)년치 (@(TotalResultCount)회)</strong>
             </div>
             <div style="display: flex; align-items: center; gap: 10px;">
                 <select @bind="SelectedYears" style="padding: 8px 15px; border-radius: 6px; border: 1px solid #ddd;">
                     @for (int i = 1; i <= 10; i++)
                     {
-                        <option value="@i">@i년</option>
+                        <option value="@i">@(i)년</option>
                     }
                 </select>
                 <button class="btn btn-secondary" style="padding: 8px 15px;" @onclick="LoadData">다시 분석</button>
