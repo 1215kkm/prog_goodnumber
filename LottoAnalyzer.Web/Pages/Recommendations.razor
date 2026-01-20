@@ -54,10 +54,67 @@
         </button>
     </div>
 
+    @{
+        var numberCounts = GetNumberAppearanceCounts();
+        var commonNumbers = numberCounts.Where(kv => kv.Value >= 3).OrderByDescending(kv => kv.Value).ToList();
+        var twoAlgoNumbers = numberCounts.Where(kv => kv.Value == 2).OrderByDescending(kv => kv.Key).ToList();
+        var hasCommon = commonNumbers.Count > 0;
+        var hasTwoAlgo = twoAlgoNumbers.Count > 0;
+    }
+
     @if (RecommendationList.Any())
     {
         <div style="margin-bottom: 15px; color: #666;">
             <strong>@(SelectedYears)년치 데이터 (@(TotalResultCount)회) 기반 분석 결과</strong>
+        </div>
+
+        <!-- 공통 추천 번호 분석 -->
+        <div class="card" style="margin-bottom: 20px; background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%); border: 1px solid #333;">
+            <div style="color: #fff; font-weight: bold; margin-bottom: 15px;">🎯 알고리즘 공통 분석</div>
+
+            @if (hasCommon)
+            {
+                <div style="margin-bottom: 15px; padding: 12px; background: rgba(76, 175, 80, 0.2); border-radius: 8px;">
+                    <div style="color: #4CAF50; font-size: 13px; margin-bottom: 8px; font-weight: bold;">
+                        ⭐ 3개 이상 알고리즘에서 추천 (핵심 번호)
+                    </div>
+                    <div style="display: flex; gap: 8px; flex-wrap: wrap; align-items: center;">
+                        @foreach (var item in commonNumbers)
+                        {
+                            <div style="position: relative;">
+                                <LottoBall Number="@item.Key" />
+                                <span style="position: absolute; top: -8px; right: -8px; background: #4CAF50; color: #fff; font-size: 10px; padding: 2px 5px; border-radius: 10px;">@(item.Value)회</span>
+                            </div>
+                        }
+                    </div>
+                </div>
+            }
+
+            @if (hasTwoAlgo)
+            {
+                <div style="padding: 12px; background: rgba(255, 152, 0, 0.15); border-radius: 8px;">
+                    <div style="color: #ff9800; font-size: 13px; margin-bottom: 8px; font-weight: bold;">
+                        📌 2개 알고리즘에서 추천
+                    </div>
+                    <div style="display: flex; gap: 8px; flex-wrap: wrap; align-items: center;">
+                        @foreach (var item in twoAlgoNumbers)
+                        {
+                            <LottoBall Number="@item.Key" Small="true" />
+                        }
+                    </div>
+                </div>
+            }
+
+            @if (!hasCommon && !hasTwoAlgo)
+            {
+                <div style="color: #888; text-align: center; padding: 10px;">
+                    모든 알고리즘이 서로 다른 번호를 추천했습니다.
+                </div>
+            }
+
+            <div style="margin-top: 15px; padding-top: 15px; border-top: 1px solid #333; color: #888; font-size: 12px;">
+                💡 여러 알고리즘에서 공통으로 추천된 번호는 다양한 분석 기준에서 유망한 번호입니다.
+            </div>
         </div>
 
         <div class="grid grid-2">
@@ -118,5 +175,21 @@
         {
             IsLoading = false;
         }
+    }
+
+    private Dictionary<int, int> GetNumberAppearanceCounts()
+    {
+        var counts = new Dictionary<int, int>();
+        foreach (var rec in RecommendationList)
+        {
+            foreach (var num in rec.Numbers)
+            {
+                if (counts.ContainsKey(num))
+                    counts[num]++;
+                else
+                    counts[num] = 1;
+            }
+        }
+        return counts;
     }
 }

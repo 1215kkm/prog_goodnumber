@@ -1,6 +1,6 @@
 @* 로또 번호 공 컴포넌트 *@
 
-<span class="ball @SizeClass @GetColorClass()" title="@Number">
+<span class="ball @SizeClass @GetColorClass() @HighlightClass" title="@Number">
     @Number
 </span>
 
@@ -11,7 +11,11 @@
     [Parameter]
     public bool Small { get; set; } = false;
 
+    [Parameter]
+    public bool Highlight { get; set; } = false;
+
     private string SizeClass => Small ? "small" : "";
+    private string HighlightClass => Highlight ? "highlight" : "";
 
     private string GetColorClass() => Number switch
     {
