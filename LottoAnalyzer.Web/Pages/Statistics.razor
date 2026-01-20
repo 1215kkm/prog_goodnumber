@@ -8,12 +8,37 @@
     @if (!IsDataLoaded)
     {
         <div class="card" style="text-align: center; padding: 40px;">
-            <p>데이터를 먼저 불러와주세요.</p>
+            <p>분석 기간을 선택하세요.</p>
+            <div style="margin: 20px 0;">
+                <label style="margin-right: 10px; font-weight: bold;">분석 기간:</label>
+                <select @bind="SelectedYears" style="padding: 10px 20px; font-size: 16px; border-radius: 8px; border: 2px solid #ddd;">
+                    @for (int i = 1; i <= 10; i++)
+                    {
+                        <option value="@i">@i년치 (@(i * 52)회)</option>
+                    }
+                </select>
+            </div>
             <button class="btn btn-primary" @onclick="LoadData">데이터 분석</button>
         </div>
     }
     else
     {
+        <!-- 기간 변경 옵션 -->
+        <div class="card" style="margin-bottom: 20px; padding: 15px; display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 10px;">
+            <div>
+                <strong>현재 분석: @SelectedYears년치 (@TotalResultCount회)</strong>
+            </div>
+            <div style="display: flex; align-items: center; gap: 10px;">
+                <select @bind="SelectedYears" style="padding: 8px 15px; border-radius: 6px; border: 1px solid #ddd;">
+                    @for (int i = 1; i <= 10; i++)
+                    {
+                        <option value="@i">@i년</option>
+                    }
+                </select>
+                <button class="btn btn-secondary" style="padding: 8px 15px;" @onclick="LoadData">다시 분석</button>
+            </div>
+        </div>
+
         <!-- 탭 메뉴 -->
         <div class="tabs">
             <span class="tab @(ActiveTab == "overall" ? "active" : "")" @onclick='() => ActiveTab = "overall"'>전체 통계</span>
@@ -152,6 +177,8 @@
 
     private bool IsDataLoaded = false;
     private string ActiveTab = "overall";
+    private int SelectedYears = 5; // 기본값 5년
+    private int TotalResultCount = 0;
 
     private List<NumberStatistics> AllStatistics = new();
     private List<NumberStatistics> HotNumbers = new();
@@ -167,7 +194,8 @@
 
     private void LoadData()
     {
-        var allResults = DataService.GetSampleData();
+        var allResults = DataService.GetSampleData(SelectedYears);
+        TotalResultCount = allResults.Count;
 
         AllStatistics = StatisticsService.CalculateOverallStatistics(allResults);
         HotNumbers = StatisticsService.AnalyzeHotNumbers(allResults, 30);
