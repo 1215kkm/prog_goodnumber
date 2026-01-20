@@ -2,6 +2,22 @@
 
 <PageTitle>통계 분석 - 로또 분석기</PageTitle>
 
+<!-- 최근 당첨번호 (Sticky) -->
+@if (LatestResult != null)
+{
+    <div class="sticky-latest-result">
+        <div class="container" style="display: flex; align-items: center; justify-content: center; gap: 8px; flex-wrap: wrap;">
+            <span style="color: #ff6b35; font-weight: bold; font-size: 13px;">@(LatestResult.Round)회</span>
+            @foreach (var num in LatestResult.Numbers)
+            {
+                <LottoBall Number="@num" Small="true" />
+            }
+            <span style="color: #666; font-size: 14px;">+</span>
+            <LottoBall Number="@LatestResult.BonusNumber" Small="true" />
+        </div>
+    </div>
+}
+
 <div class="container">
     <h1 style="margin-bottom: 20px;">통계 분석</h1>
 
@@ -177,8 +193,19 @@
 
     private bool IsDataLoaded = false;
     private string ActiveTab = "overall";
-    private int SelectedYears = 5; // 기본값 5년
+    private int SelectedYears = 6; // 기본값 6년
     private int TotalResultCount = 0;
+    private LottoResult? LatestResult;
+
+    protected override void OnInitialized()
+    {
+        try
+        {
+            var results = DataService.GetSampleData();
+            LatestResult = results.OrderByDescending(r => r.Round).FirstOrDefault();
+        }
+        catch { }
+    }
 
     private List<NumberStatistics> AllStatistics = new();
     private List<NumberStatistics> HotNumbers = new();

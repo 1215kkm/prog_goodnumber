@@ -1330,3 +1330,25 @@ tr:hover {
         gap: 10px;
     }
 }
+
+/* Sticky Latest Result */
+.sticky-latest-result {
+    position: sticky;
+    top: 56px; /* navbar height */
+    z-index: 90;
+    background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
+    padding: 10px 0;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.3);
+}
+
+@media (max-width: 768px) {
+    .sticky-latest-result {
+        top: 50px;
+        padding: 8px 0;
+    }
+    .sticky-latest-result .ball.small {
+        width: 28px;
+        height: 28px;
+        font-size: 12px;
+    }
+}
