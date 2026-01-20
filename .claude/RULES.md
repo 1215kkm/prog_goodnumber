@@ -82,6 +82,7 @@
 | 항목 | 웹 (Blazor) | 앱 (React Native) |
 |------|-------------|-------------------|
 | 메인 페이지 | `Pages/Index.razor` | `screens/HomeScreen.tsx` |
+| 당첨확인 | `Pages/History.razor` | (미구현) |
 | 통계 분석 | `Pages/Statistics.razor` | `screens/StatisticsScreen.tsx` |
 | AI 추천 | `Pages/Recommendations.razor` | `screens/RecommendationsScreen.tsx` |
 | 데이터 서비스 | `Core/Services/LottoDataService.cs` | `services/lotteryService.ts` |
@@ -125,4 +126,4 @@
 ---
 
 *마지막 업데이트: 2026-01-20*
-*사유: 데이터 업데이트 시 함께 수정할 페이지 목록 추가*
+*사유: 당첨확인(History) 페이지 추가*

@@ -1,0 +1,249 @@
+@page "/history"
+
+<PageTitle>당첨확인 - 로또 분석기</PageTitle>
+
+<div class="container">
+    <h1 style="margin-bottom: 10px;">당첨번호 확인</h1>
+    <p style="color: #666; margin-bottom: 30px;">
+        최근 20회차 당첨번호와 AI 추천 적중 결과를 확인하세요.
+    </p>
+
+    <div class="history-list">
+        @foreach (var result in RecentResults)
+        {
+            var recommendations = GetRecommendations(result.Round);
+            <div class="history-card" style="background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%); border-radius: 15px; padding: 20px; margin-bottom: 20px;">
+                <!-- 회차 정보 -->
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px;">
+                    <div>
+                        <span style="color: #ff6b35; font-size: 1.3rem; font-weight: bold;">@(result.Round)회</span>
+                        <span style="color: #888; margin-left: 10px;">@(result.DrawDate.ToString("yyyy.MM.dd"))</span>
+                    </div>
+                </div>
+
+                <!-- 실제 당첨번호 -->
+                <div style="margin-bottom: 20px;">
+                    <div style="color: #aaa; font-size: 12px; margin-bottom: 8px;">실제 당첨번호</div>
+                    <div style="display: flex; align-items: center; gap: 8px; flex-wrap: wrap;">
+                        @foreach (var num in result.Numbers)
+                        {
+                            <LottoBall Number="@num" />
+                        }
+                        <span style="color: #888; font-size: 1.5rem; margin: 0 5px;">+</span>
+                        <div style="position: relative;">
+                            <LottoBall Number="@result.BonusNumber" />
+                            <span style="position: absolute; bottom: -18px; left: 50%; transform: translateX(-50%); font-size: 10px; color: #ff6b35;">보너스</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- AI 추천 적중 결과 표 -->
+                @if (recommendations.Any())
+                {
+                    <div style="margin-top: 25px;">
+                        <div style="color: #aaa; font-size: 12px; margin-bottom: 10px;">🤖 AI 추천 적중 결과</div>
+                        <div style="overflow-x: auto;">
+                            <table style="width: 100%; border-collapse: collapse; font-size: 14px;">
+                                <thead>
+                                    <tr style="border-bottom: 1px solid #333;">
+                                        <th style="text-align: left; padding: 8px; color: #888; width: 80px;">알고리즘</th>
+                                        <th style="text-align: center; padding: 8px; color: #888;">추천 번호</th>
+                                        <th style="text-align: center; padding: 8px; color: #888; width: 80px;">적중</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    @foreach (var rec in recommendations)
+                                    {
+                                        var matchResult = CompareNumbers(rec.Numbers, result);
+                                        <tr style="border-bottom: 1px solid #222;">
+                                            <td style="padding: 10px 8px; color: #ccc; font-size: 12px;">@rec.RecommendationType</td>
+                                            <td style="padding: 10px 8px; text-align: center;">
+                                                <div style="display: flex; justify-content: center; gap: 4px; flex-wrap: wrap;">
+                                                    @foreach (var num in rec.Numbers)
+                                                    {
+                                                        <span class="@GetBallClass(num, result)">@num</span>
+                                                    }
+                                                </div>
+                                            </td>
+                                            <td style="padding: 10px 8px; text-align: center;">
+                                                <span class="@GetMatchColorClass(matchResult.MatchCount)" style="font-weight: bold; font-size: 16px;">
+                                                    @(matchResult.MatchCount)개
+                                                </span>
+                                                @if (matchResult.BonusMatch)
+                                                {
+                                                    <span style="color: #ff6b35; font-size: 11px; display: block;">+보너스</span>
+                                                }
+                                            </td>
+                                        </tr>
+                                    }
+                                </tbody>
+                            </table>
+                        </div>
+
+                        <!-- 최고 적중 결과 요약 -->
+                        @{
+                            var bestMatch = GetBestMatch(recommendations, result);
+                        }
+                        @if (bestMatch.MatchCount >= 3)
+                        {
+                            <div style="margin-top: 15px; padding: 10px; background: rgba(76, 175, 80, 0.2); border-radius: 8px; text-align: center;">
+                                <span style="color: #4CAF50; font-weight: bold;">
+                                    🎉 최고 @(bestMatch.MatchCount)개 적중!
+                                    @if (bestMatch.BonusMatch) { <span>(+보너스)</span> }
+                                </span>
+                            </div>
+                        }
+                    </div>
+                }
+                else
+                {
+                    <div style="margin-top: 15px; padding: 10px; background: #222; border-radius: 8px; text-align: center; color: #666; font-size: 13px;">
+                        이전 데이터 부족으로 AI 추천 불가
+                    </div>
+                }
+            </div>
+        }
+    </div>
+
+    @if (RecentResults.Count == 0)
+    {
+        <div class="card" style="text-align: center; padding: 40px;">
+            <p style="color: #666;">데이터를 불러오는 중...</p>
+        </div>
+    }
+
+    <!-- 범례 -->
+    <div class="card" style="margin-top: 20px; background: #1a1a2e; padding: 15px;">
+        <div style="color: #aaa; font-size: 12px; margin-bottom: 10px;">범례</div>
+        <div style="display: flex; gap: 20px; flex-wrap: wrap; font-size: 13px;">
+            <div style="display: flex; align-items: center; gap: 5px;">
+                <span style="display: inline-block; width: 20px; height: 20px; border-radius: 50%; background: #4CAF50;"></span>
+                <span style="color: #ccc;">당첨번호 적중</span>
+            </div>
+            <div style="display: flex; align-items: center; gap: 5px;">
+                <span style="display: inline-block; width: 20px; height: 20px; border-radius: 50%; background: #ff6b35;"></span>
+                <span style="color: #ccc;">보너스 번호 적중</span>
+            </div>
+            <div style="display: flex; align-items: center; gap: 5px;">
+                <span style="display: inline-block; width: 20px; height: 20px; border-radius: 50%; background: #333; border: 1px solid #444;"></span>
+                <span style="color: #ccc;">미적중</span>
+            </div>
+        </div>
+    </div>
+
+    <div class="card" style="margin-top: 15px; background: #fff3cd;">
+        <p style="margin: 0; color: #856404; font-size: 13px;">
+            <strong>참고:</strong> AI 추천은 해당 회차 추첨 전 데이터만으로 생성한 시뮬레이션 결과입니다.
+            동일한 회차는 항상 동일한 추천 번호가 표시됩니다.
+        </p>
+    </div>
+</div>
+
+<style>
+    .match-ball {
+        display: inline-block;
+        width: 28px;
+        height: 28px;
+        line-height: 28px;
+        text-align: center;
+        border-radius: 50%;
+        font-size: 12px;
+        font-weight: bold;
+        background: #4CAF50;
+        color: #fff;
+        border: 2px solid #69F0AE;
+    }
+    .bonus-ball {
+        display: inline-block;
+        width: 28px;
+        height: 28px;
+        line-height: 28px;
+        text-align: center;
+        border-radius: 50%;
+        font-size: 12px;
+        font-weight: bold;
+        background: #ff6b35;
+        color: #fff;
+        border: 2px solid #ff8a65;
+    }
+    .miss-ball {
+        display: inline-block;
+        width: 28px;
+        height: 28px;
+        line-height: 28px;
+        text-align: center;
+        border-radius: 50%;
+        font-size: 12px;
+        font-weight: bold;
+        background: #333;
+        color: #888;
+        border: 1px solid #444;
+    }
+    .match-high { color: #4CAF50; }
+    .match-mid { color: #ff9800; }
+    .match-low { color: #666; }
+</style>
+
+@code {
+    [Inject] public LottoDataService DataService { get; set; } = default!;
+    [Inject] public RecommendationService RecommendationService { get; set; } = default!;
+
+    private List<LottoResult> RecentResults = new();
+    private List<LottoResult> AllResults = new();
+    private Dictionary<int, List<RecommendedNumbers>> RecommendationsCache = new();
+
+    protected override void OnInitialized()
+    {
+        try
+        {
+            AllResults = DataService.GetSampleData();
+            RecentResults = AllResults
+                .OrderByDescending(r => r.Round)
+                .Take(20)
+                .ToList();
+
+            // 추천 미리 계산
+            foreach (var result in RecentResults)
+            {
+                RecommendationsCache[result.Round] = RecommendationService.GenerateHistoricalRecommendations(AllResults, result.Round);
+            }
+        }
+        catch { }
+    }
+
+    private List<RecommendedNumbers> GetRecommendations(int round)
+    {
+        return RecommendationsCache.TryGetValue(round, out var recs) ? recs : new List<RecommendedNumbers>();
+    }
+
+    private (int MatchCount, bool BonusMatch) CompareNumbers(int[] recommended, LottoResult actual)
+    {
+        int matchCount = recommended.Count(r => actual.Numbers.Contains(r));
+        bool bonusMatch = recommended.Contains(actual.BonusNumber);
+        return (matchCount, bonusMatch);
+    }
+
+    private (int MatchCount, bool BonusMatch) GetBestMatch(List<RecommendedNumbers> recommendations, LottoResult result)
+    {
+        var best = recommendations
+            .Select(r => CompareNumbers(r.Numbers, result))
+            .OrderByDescending(m => m.MatchCount)
+            .ThenByDescending(m => m.BonusMatch)
+            .FirstOrDefault();
+        return best;
+    }
+
+    private string GetBallClass(int num, LottoResult result)
+    {
+        if (result.Numbers.Contains(num)) return "match-ball";
+        if (num == result.BonusNumber) return "bonus-ball";
+        return "miss-ball";
+    }
+
+    private string GetMatchColorClass(int matchCount)
+    {
+        if (matchCount >= 3) return "match-high";
+        if (matchCount >= 2) return "match-mid";
+        return "match-low";
+    }
+}
