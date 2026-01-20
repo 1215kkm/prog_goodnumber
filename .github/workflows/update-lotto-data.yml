@@ -1,0 +1,55 @@
+name: Update Lotto Data
+
+on:
+  # 매주 토요일 21:30 KST (12:30 UTC)
+  schedule:
+    - cron: '30 12 * * 6'
+
+  # 수동 실행 가능
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  update-data:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Run update script
+        id: update
+        run: |
+          node scripts/update-lotto-data.js
+          echo "changes=$(git status --porcelain | wc -l)" >> $GITHUB_OUTPUT
+
+      - name: Check for changes
+        id: check
+        run: |
+          if [ -n "$(git status --porcelain)" ]; then
+            echo "has_changes=true" >> $GITHUB_OUTPUT
+          else
+            echo "has_changes=false" >> $GITHUB_OUTPUT
+          fi
+
+      - name: Commit and push changes
+        if: steps.check.outputs.has_changes == 'true'
+        run: |
+          git config --local user.email "github-actions[bot]@users.noreply.github.com"
+          git config --local user.name "github-actions[bot]"
+          git add LottoAnalyzer.Core/Services/LottoDataService.cs
+          git commit -m "Auto-update: Add latest lotto results $(date +'%Y-%m-%d')"
+          git push
+
+      - name: No changes detected
+        if: steps.check.outputs.has_changes == 'false'
+        run: echo "No new lottery data to update"
