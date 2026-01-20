@@ -64,12 +64,14 @@
         @{
             var numberCounts = GetNumberAppearanceCounts();
             var commonNumbers = numberCounts.Where(kv => kv.Value >= 3).OrderByDescending(kv => kv.Value).ToList();
-            var duplicateNumbers = numberCounts.Where(kv => kv.Value >= 2).OrderByDescending(kv => kv.Value).ToList();
+            var twoAlgoNumbers = numberCounts.Where(kv => kv.Value == 2).OrderByDescending(kv => kv.Key).ToList();
+            var hasCommon = commonNumbers.Count > 0;
+            var hasTwoAlgo = twoAlgoNumbers.Count > 0;
         }
         <div class="card" style="margin-bottom: 20px; background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%); border: 1px solid #333;">
             <div style="color: #fff; font-weight: bold; margin-bottom: 15px;">🎯 알고리즘 공통 분석</div>
 
-            @if (commonNumbers.Any())
+            @if (hasCommon)
             {
                 <div style="margin-bottom: 15px; padding: 12px; background: rgba(76, 175, 80, 0.2); border-radius: 8px;">
                     <div style="color: #4CAF50; font-size: 13px; margin-bottom: 8px; font-weight: bold;">
@@ -87,14 +89,14 @@
                 </div>
             }
 
-            @if (duplicateNumbers.Any(kv => kv.Value == 2))
+            @if (hasTwoAlgo)
             {
                 <div style="padding: 12px; background: rgba(255, 152, 0, 0.15); border-radius: 8px;">
                     <div style="color: #ff9800; font-size: 13px; margin-bottom: 8px; font-weight: bold;">
                         📌 2개 알고리즘에서 추천
                     </div>
                     <div style="display: flex; gap: 8px; flex-wrap: wrap; align-items: center;">
-                        @foreach (var item in duplicateNumbers.Where(kv => kv.Value == 2))
+                        @foreach (var item in twoAlgoNumbers)
                         {
                             <LottoBall Number="@item.Key" Small="true" />
                         }
@@ -102,7 +104,7 @@
                 </div>
             }
 
-            @if (!commonNumbers.Any() && !duplicateNumbers.Any(kv => kv.Value == 2))
+            @if (!hasCommon && !hasTwoAlgo)
             {
                 <div style="color: #888; text-align: center; padding: 10px;">
                     모든 알고리즘이 서로 다른 번호를 추천했습니다.
