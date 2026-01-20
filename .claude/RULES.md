@@ -75,7 +75,26 @@
 
 ---
 
-## 6. 이 프로젝트 특이사항
+## 6. 데이터 업데이트 시 함께 수정할 페이지
+
+### ⚠️ 중요: 데이터 변경 시 아래 페이지 모두 확인/수정 필수!
+
+| 항목 | 웹 (Blazor) | 앱 (React Native) |
+|------|-------------|-------------------|
+| 메인 페이지 | `Pages/Index.razor` | `screens/HomeScreen.tsx` |
+| 통계 분석 | `Pages/Statistics.razor` | `screens/StatisticsScreen.tsx` |
+| AI 추천 | `Pages/Recommendations.razor` | `screens/RecommendationsScreen.tsx` |
+| 데이터 서비스 | `Core/Services/LottoDataService.cs` | `services/lotteryService.ts` |
+
+### 업데이트 체크리스트:
+- [ ] 연도/회차 수 표기 일관성 (예: "10년간 520회+")
+- [ ] 최신 데이터 반영 여부
+- [ ] 연도 선택 기능 동기화
+- [ ] 홍보 문구 일관성
+
+---
+
+## 7. 이 프로젝트 특이사항
 
 ### 로또 분석기 프로젝트:
 - 동행복권 API: `https://www.dhlottery.co.kr/common.do?method=getLottoNumber&drwNo={회차}`
@@ -105,5 +124,5 @@
 
 ---
 
-*마지막 업데이트: 2026-01-11*
-*사유: 로또 당첨번호를 검증 없이 가짜로 추가한 실수 발생*
+*마지막 업데이트: 2026-01-20*
+*사유: 데이터 업데이트 시 함께 수정할 페이지 목록 추가*
