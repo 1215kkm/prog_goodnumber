@@ -31,14 +31,14 @@ namespace LottoAnalyzer.Core.Services
             // 2. 동반 출현 기반 추천
             recommendations.Add(GeneratePairBasedRecommendation(results));
 
-            // 3. 핫 넘버 기반 추천
-            recommendations.Add(GenerateHotNumberRecommendation(results));
-
-            // 4. 출현 주기 기반 추천 (Due Numbers)
+            // 3. 출현 주기 기반 추천 (Due Numbers)
             recommendations.Add(GenerateCycleBasedRecommendation(results));
 
-            // 5. 현재 계절 + 월 복합 추천
+            // 4. 현재 계절 + 월 복합 추천
             recommendations.Add(GenerateSeasonMonthComboRecommendation(results));
+
+            // 5. 핫 넘버 기반 추천
+            recommendations.Add(GenerateHotNumberRecommendation(results));
 
             // 6. 균형 최적화 추천
             recommendations.Add(GenerateOptimalBalanceRecommendation(results));
