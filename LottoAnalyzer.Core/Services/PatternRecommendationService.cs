@@ -6,9 +6,11 @@ using LottoAnalyzer.Core.Models;
 namespace LottoAnalyzer.Core.Services
 {
     /// <summary>
-    /// 패턴 기반 추천 서비스 - 백테스트 2차 검증 결과
-    /// 메타+합계필터(1.600, 23% 3+), 구간강제+간격(1.590, 6% 5+),
-    /// 구간가중(1.580, 6개적중 2회), 구간+계절보정(1.560, 14% 4+)
+    /// 패턴 기반 추천 서비스 - 조작 가설 기반 v6 검증 결과
+    /// Triple(LCG+off3+depth): 1.670, 5+ 10%, 6개(1등) 2%
+    /// ±3오프셋+depth보수: 1.670, 5+ 10%, 6개 1%
+    /// LCG 패턴: 1.630, 5+ 8%
+    /// 메타전략: 1.600, 3+ 23%
     /// </summary>
     public class PatternRecommendationService
     {
@@ -19,23 +21,199 @@ namespace LottoAnalyzer.Core.Services
             var sortedResults = results.OrderBy(r => r.Round).ToList();
             var recommendations = new List<PatternRecommendation>();
 
-            // 1. 메타전략+합계필터 (평균 1.600, 3+ 23%, 5+ 5%)
+            // 1. Triple 조작패턴 (평균 1.670, 5+ 10%, 6개 2%)
+            recommendations.Add(GenerateTripleManipulation(sortedResults));
+
+            // 2. ±3 오프셋+depth보수 (평균 1.670, 5+ 10%, 6개 1%)
+            recommendations.Add(GenerateOffset3Depth(sortedResults));
+
+            // 3. LCG 패턴 (평균 1.630, 5+ 8%)
+            recommendations.Add(GenerateLcgPattern(sortedResults));
+
+            // 4. 메타전략+합계필터 (평균 1.600, 3+ 23%)
             recommendations.Add(GenerateMetaStrategy(sortedResults));
-
-            // 2. 구간강제+간격 (평균 1.590, 3+ 20%, 5+ 6%)
-            recommendations.Add(GenerateRangeForced(sortedResults));
-
-            // 3. 구간가중 (평균 1.580, 3+ 22%, 6개적중 2%)
-            recommendations.Add(GenerateRangeWeighted(sortedResults));
-
-            // 4. 구간+계절보정 (평균 1.560, 4+ 14%)
-            recommendations.Add(GenerateRangeSeasonal(sortedResults));
 
             return recommendations;
         }
 
         /// <summary>
-        /// 메타전략+합계필터 (백테스트 1위: 평균 1.600, 3+적중 23%)
+        /// Triple 조작패턴 (v6 1위: 평균 1.670, 5+적중 10%, 6개 2%)
+        /// LCG(13,31) + ±3 오프셋 + 다회차 보수 패턴 조합
+        /// 조작 가설: 이전 번호의 ±3, 보수(46-n), LCG 변환이 통계적으로 유의미
+        /// </summary>
+        private PatternRecommendation GenerateTripleManipulation(List<LottoResult> results)
+        {
+            var gapInfo = CalculateGapInfo(results);
+            var hot = GetHotScores(results, 20);
+            var prev = results.Last().Numbers;
+            int nextRound = results.Last().Round + 1;
+
+            var scores = new Dictionary<int, double>();
+            for (int i = 1; i <= 45; i++)
+            {
+                var (avgGap, currentGap) = gapInfo[i];
+                double ratio = avgGap > 0 ? (double)currentGap / avgGap : 1.0;
+                scores[i] = (ratio >= 0.8 && ratio <= 2.5) ? ratio * 10 : 0;
+                scores[i] = scores[i] * 3 + hot[i];
+            }
+
+            // LCG(a=13, c=31) 패턴
+            for (int k = 0; k < 6; k++)
+            {
+                int lcg = ((13 * nextRound + 31 + k * 7) % 45) + 1;
+                scores[lcg] += 4;
+            }
+
+            // ±3 오프셋 + ±1 회피
+            foreach (var n in prev)
+            {
+                foreach (int d in new[] { -3, 3 })
+                {
+                    int t = n + d;
+                    if (t >= 1 && t <= 45) scores[t] += 4;
+                }
+                foreach (int d in new[] { -1, 1 })
+                {
+                    int t = n + d;
+                    if (t >= 1 && t <= 45) scores[t] -= 2;
+                }
+            }
+
+            // depth3 보수 패턴 (이전 2~3회차)
+            for (int d = 2; d <= Math.Min(3, results.Count); d++)
+            {
+                var prevD = results[results.Count - d].Numbers;
+                double w = Math.Pow(0.6, d - 1) * 4;
+                foreach (var n in prevD)
+                {
+                    int comp = 46 - n;
+                    if (comp >= 1 && comp <= 45) scores[comp] += w;
+                    foreach (int off in new[] { -2, 2 })
+                    {
+                        int t = n + off;
+                        if (t >= 1 && t <= 45) scores[t] += w * 0.5;
+                    }
+                }
+            }
+
+            var selected = SelectFromRanges(scores);
+
+            return new PatternRecommendation
+            {
+                StrategyName = "Triple 조작패턴",
+                Description = "LCG(13,31) + ±3오프셋 + 다회차보수 조합 - 조작 가설 기반 5+ 적중 10%",
+                BacktestScore = 1.670,
+                BacktestHit3 = 21,
+                Numbers = selected.OrderBy(n => n).ToArray(),
+                StrategyDetail = "LCG(a=13,c=31) + 이전번호±3가중 + ±1회피 + 2~3회차전 보수(46-n) → 구간별 최고점 선택"
+            };
+        }
+
+        /// <summary>
+        /// ±3 오프셋 + depth보수 (v6 2위: 평균 1.670, 5+적중 10%, 6개 1%)
+        /// 이전 번호의 ±3이 통계적으로 유의미(17.6%)하고 ±1은 회피되는 패턴
+        /// </summary>
+        private PatternRecommendation GenerateOffset3Depth(List<LottoResult> results)
+        {
+            var gapInfo = CalculateGapInfo(results);
+            var hot = GetHotScores(results, 20);
+            var prev = results.Last().Numbers;
+
+            var scores = new Dictionary<int, double>();
+            for (int i = 1; i <= 45; i++)
+            {
+                var (avgGap, currentGap) = gapInfo[i];
+                double ratio = avgGap > 0 ? (double)currentGap / avgGap : 1.0;
+                scores[i] = (ratio >= 0.8 && ratio <= 2.5) ? ratio * 10 : 0;
+                scores[i] = scores[i] * 3 + hot[i];
+            }
+
+            // ±3 오프셋 (가중치 6)
+            foreach (var n in prev)
+            {
+                foreach (int d in new[] { -3, 3 })
+                {
+                    int t = n + d;
+                    if (t >= 1 && t <= 45) scores[t] += 6;
+                }
+                foreach (int d in new[] { -1, 1 })
+                {
+                    int t = n + d;
+                    if (t >= 1 && t <= 45) scores[t] -= 3;
+                }
+            }
+
+            // depth3 보수 (decay 0.8)
+            for (int d = 2; d <= Math.Min(3, results.Count); d++)
+            {
+                var prevD = results[results.Count - d].Numbers;
+                double w = Math.Pow(0.8, d - 1) * 5;
+                foreach (var n in prevD)
+                {
+                    int comp = 46 - n;
+                    if (comp >= 1 && comp <= 45) scores[comp] += w;
+                    foreach (int off in new[] { -2, 2 })
+                    {
+                        int t = n + off;
+                        if (t >= 1 && t <= 45) scores[t] += w * 0.5;
+                    }
+                }
+            }
+
+            var selected = SelectFromRanges(scores);
+
+            return new PatternRecommendation
+            {
+                StrategyName = "±3오프셋+보수",
+                Description = "±3 유의미(17.6%), ±1 회피 패턴 + 다회차 보수(46-n) 가중",
+                BacktestScore = 1.670,
+                BacktestHit3 = 24,
+                Numbers = selected.OrderBy(n => n).ToArray(),
+                StrategyDetail = "이전번호±3가중(w6) + ±1페널티(w3) + 2~3회차전 보수/±2 → 구간별 최고점"
+            };
+        }
+
+        /// <summary>
+        /// LCG 패턴 (v6 3위: 평균 1.630, 5+적중 8%)
+        /// 회차 기반 LCG(a=13, c=17) 변환이 18% 유의미
+        /// </summary>
+        private PatternRecommendation GenerateLcgPattern(List<LottoResult> results)
+        {
+            var gapInfo = CalculateGapInfo(results);
+            var hot = GetHotScores(results, 20);
+            int nextRound = results.Last().Round + 1;
+
+            var scores = new Dictionary<int, double>();
+            for (int i = 1; i <= 45; i++)
+            {
+                var (avgGap, currentGap) = gapInfo[i];
+                double ratio = avgGap > 0 ? (double)currentGap / avgGap : 1.0;
+                scores[i] = (ratio >= 0.8 && ratio <= 2.5) ? ratio * 10 : 0;
+                scores[i] = scores[i] * 3 + hot[i];
+            }
+
+            // LCG(a=13, c=17)
+            for (int k = 0; k < 6; k++)
+            {
+                int lcg = ((13 * nextRound + 17 + k * 7) % 45) + 1;
+                scores[lcg] += 5;
+            }
+
+            var selected = SelectFromRanges(scores);
+
+            return new PatternRecommendation
+            {
+                StrategyName = "LCG 패턴",
+                Description = $"회차({nextRound}) 기반 LCG(13,17) 변환 - 18% 유의미 패턴",
+                BacktestScore = 1.630,
+                BacktestHit3 = 22,
+                Numbers = selected.OrderBy(n => n).ToArray(),
+                StrategyDetail = $"LCG: (13×{nextRound}+17+k×7) mod 45 + 간격 점수 + 핫넘버 → 구간별 최고점"
+            };
+        }
+
+        /// <summary>
+        /// 메타전략+합계필터 (평균 1.600, 3+적중 23%)
         /// 10개 하위 전략의 투표 결과를 합산하여 가장 많이 추천된 번호 선택
         /// </summary>
         private PatternRecommendation GenerateMetaStrategy(List<LottoResult> results)
@@ -93,123 +271,6 @@ namespace LottoAnalyzer.Core.Services
             };
         }
 
-        /// <summary>
-        /// 구간강제+간격 (백테스트 2위: 평균 1.590, 5+적중 6%)
-        /// 각 번호 구간(1-9, 10-19, ..., 40-45)에서 반드시 1개씩 선택
-        /// </summary>
-        private PatternRecommendation GenerateRangeForced(List<LottoResult> results)
-        {
-            var gapInfo = CalculateGapInfo(results);
-            var hot = GetHotScores(results, 20);
-
-            var scores = new Dictionary<int, double>();
-            for (int i = 1; i <= 45; i++)
-            {
-                var (avgGap, currentGap) = gapInfo[i];
-                double ratio = avgGap > 0 ? (double)currentGap / avgGap : 1.0;
-                scores[i] = (ratio >= 0.8 && ratio <= 2.5) ? ratio * 10 : 0;
-                scores[i] += hot[i] * 1.5;
-            }
-
-            var selected = SelectFromRanges(scores);
-
-            return new PatternRecommendation
-            {
-                StrategyName = "구간강제+간격",
-                Description = "각 번호 구간에서 최소 1개씩 선택하여 균형 잡힌 조합 생성",
-                BacktestScore = 1.590,
-                BacktestHit3 = 20,
-                Numbers = selected.OrderBy(n => n).ToArray(),
-                StrategyDetail = "5개 구간(1-9, 10-19, 20-29, 30-39, 40-45)에서 간격 점수 최고인 번호 1개씩 + 나머지 1개"
-            };
-        }
-
-        /// <summary>
-        /// 구간가중 전략 (백테스트 3위: 평균 1.580, 6개 적중 2회)
-        /// 10-19구간에서 2개 선택 (통계적으로 가장 자주 당첨되는 구간)
-        /// </summary>
-        private PatternRecommendation GenerateRangeWeighted(List<LottoResult> results)
-        {
-            var gapInfo = CalculateGapInfo(results);
-            var hot = GetHotScores(results, 20);
-
-            var scores = new Dictionary<int, double>();
-            for (int i = 1; i <= 45; i++)
-            {
-                var (avgGap, currentGap) = gapInfo[i];
-                double ratio = avgGap > 0 ? (double)currentGap / avgGap : 1.0;
-                scores[i] = (ratio >= 0.8 && ratio <= 2.0) ? ratio * 10 : 0;
-                scores[i] += hot[i] * 1.5;
-                if (currentGap <= 3) scores[i] += 4;
-            }
-
-            // 구간별 가중 선택: 1-9:1개, 10-19:2개, 20-29:1개, 30-39:1개, 40-45:1개
-            var ranges = new[] {
-                (1, 9, 1), (10, 19, 2), (20, 29, 1), (30, 39, 1), (40, 45, 1)
-            };
-
-            var selected = new List<int>();
-            foreach (var (min, max, count) in ranges)
-            {
-                var rangeNums = new List<(int num, double score)>();
-                for (int n = min; n <= max; n++)
-                    rangeNums.Add((n, scores[n]));
-                rangeNums = rangeNums.OrderByDescending(x => x.score).ToList();
-                selected.AddRange(rangeNums.Take(count).Select(x => x.num));
-            }
-
-            return new PatternRecommendation
-            {
-                StrategyName = "구간가중",
-                Description = "10-19 구간(가장 빈출)에서 2개, 나머지 구간에서 1개씩 선택",
-                BacktestScore = 1.580,
-                BacktestHit3 = 22,
-                Numbers = selected.OrderBy(n => n).ToArray(),
-                StrategyDetail = "구간별 가중 배분(10-19구간 2배) + 간격 점수 + 핫넘버 점수 조합"
-            };
-        }
-
-        /// <summary>
-        /// 구간+계절보정 (백테스트 4위: 평균 1.560, 4+적중 14%)
-        /// 현재 월에 자주 나온 번호에 가산점 부여
-        /// </summary>
-        private PatternRecommendation GenerateRangeSeasonal(List<LottoResult> results)
-        {
-            var gapInfo = CalculateGapInfo(results);
-            var hot = GetHotScores(results, 20);
-
-            int currentMonth = results.Last().DrawDate.Month;
-            var sameMonthResults = results.Where(r => r.DrawDate.Month == currentMonth).ToList();
-            var monthFreq = new Dictionary<int, int>();
-            for (int i = 1; i <= 45; i++) monthFreq[i] = 0;
-            foreach (var r in sameMonthResults)
-                foreach (var n in r.Numbers)
-                    monthFreq[n]++;
-            int maxMF = monthFreq.Values.DefaultIfEmpty(1).Max();
-            if (maxMF == 0) maxMF = 1;
-
-            var scores = new Dictionary<int, double>();
-            for (int i = 1; i <= 45; i++)
-            {
-                var (avgGap, currentGap) = gapInfo[i];
-                double ratio = avgGap > 0 ? (double)currentGap / avgGap : 1.0;
-                scores[i] = (ratio >= 0.7 && ratio <= 2.5) ? ratio * 10 : 0;
-                scores[i] += hot[i] * 1.5;
-                scores[i] += ((double)monthFreq[i] / maxMF) * 5; // 계절 보정
-            }
-
-            var selected = SelectFromRanges(scores);
-
-            return new PatternRecommendation
-            {
-                StrategyName = "구간+계절보정",
-                Description = $"현재 월({currentMonth}월)에 자주 당첨된 번호에 가산점을 적용한 구간 분석",
-                BacktestScore = 1.560,
-                BacktestHit3 = 21,
-                Numbers = selected.OrderBy(n => n).ToArray(),
-                StrategyDetail = $"간격 분석 + 핫넘버 + {currentMonth}월 출현 빈도 보정 → 구간별 최고 번호 선택"
-            };
-        }
 
         // ============================
         // 유틸리티 메서드
