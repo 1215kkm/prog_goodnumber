@@ -11,5 +11,6 @@ builder.Services.AddScoped(sp => new HttpClient { BaseAddress = new Uri(builder.
 builder.Services.AddScoped<LottoDataService>();
 builder.Services.AddScoped<StatisticsService>();
 builder.Services.AddScoped<RecommendationService>();
+builder.Services.AddScoped<PatternRecommendationService>();
 
 await builder.Build().RunAsync();
