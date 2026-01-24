@@ -175,6 +175,7 @@ namespace LottoAnalyzer.Core.Services
             return new List<(int, DateTime, int[], int)>
             {
                 // 2026년 1월 - 최신 데이터 (동행복권 공식 확인)
+                (1208, new DateTime(2026, 1, 24), new[] { 6, 27, 30, 36, 38, 42 }, 25),
                 (1207, new DateTime(2026, 1, 17), new[] { 10, 22, 24, 27, 38, 45 }, 11),
                 (1206, new DateTime(2026, 1, 10), new[] { 1, 3, 17, 26, 27, 42 }, 23),
                 (1205, new DateTime(2026, 1, 3), new[] { 1, 4, 16, 23, 31, 41 }, 2),
