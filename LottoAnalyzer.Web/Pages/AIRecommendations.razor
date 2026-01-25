@@ -21,29 +21,29 @@
 <div class="container">
     <h1 style="margin-bottom: 10px;">AI 패턴 추천</h1>
     <p style="color: #666; margin-bottom: 20px;">
-        백테스트 2차 검증으로 최적화된 패턴 분석 전략입니다.
-        랜덤 대비 <strong>최대 100% 높은 적중률</strong>, 3개 이상 적중 23%를 달성합니다.
+        조작 가설 기반 v6 백테스트로 최적화된 패턴 분석 전략입니다.
+        랜덤 대비 <strong>+109%</strong> 적중률, <strong>5개 이상 적중 10%</strong>, 6개(1등) 2%를 달성합니다.
     </p>
 
     <!-- 전략 설명 카드 -->
     <div class="card" style="margin-bottom: 20px; padding: 15px; background: linear-gradient(135deg, #0f0c29 0%, #302b63 50%, #24243e 100%); border: 1px solid #444;">
-        <div style="color: #fff; font-weight: bold; margin-bottom: 10px;">백테스트 2차 검증 결과</div>
+        <div style="color: #fff; font-weight: bold; margin-bottom: 10px;">조작 가설 기반 v6 백테스트 결과</div>
         <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(120px, 1fr)); gap: 10px;">
             <div style="text-align: center; padding: 8px; background: rgba(255,255,255,0.1); border-radius: 8px;">
-                <div style="color: #4CAF50; font-size: 20px; font-weight: bold;">1.600</div>
+                <div style="color: #4CAF50; font-size: 20px; font-weight: bold;">1.670</div>
                 <div style="color: #aaa; font-size: 11px;">최고 평균적중</div>
             </div>
             <div style="text-align: center; padding: 8px; background: rgba(255,255,255,0.1); border-radius: 8px;">
-                <div style="color: #ff9800; font-size: 20px; font-weight: bold;">23%</div>
-                <div style="color: #aaa; font-size: 11px;">3개+ 적중률</div>
+                <div style="color: #ff9800; font-size: 20px; font-weight: bold;">10%</div>
+                <div style="color: #aaa; font-size: 11px;">5개+ 적중률</div>
             </div>
             <div style="text-align: center; padding: 8px; background: rgba(255,255,255,0.1); border-radius: 8px;">
-                <div style="color: #2196F3; font-size: 20px; font-weight: bold;">+100%</div>
+                <div style="color: #2196F3; font-size: 20px; font-weight: bold;">+109%</div>
                 <div style="color: #aaa; font-size: 11px;">랜덤 대비</div>
             </div>
             <div style="text-align: center; padding: 8px; background: rgba(255,255,255,0.1); border-radius: 8px;">
-                <div style="color: #e91e63; font-size: 20px; font-weight: bold;">0.800</div>
-                <div style="color: #aaa; font-size: 11px;">랜덤 기대값</div>
+                <div style="color: #e91e63; font-size: 20px; font-weight: bold;">2%</div>
+                <div style="color: #aaa; font-size: 11px;">6개(1등) 적중</div>
             </div>
         </div>
     </div>
@@ -85,7 +85,7 @@
                         </span>
                     </div>
                     <div style="font-size: 12px; color: #888;">
-                        3+적중 @(rec.BacktestHit3)% | 랜덤 대비 +@(((rec.BacktestScore - 0.8) / 0.8 * 100).ToString("F0"))%
+                        적중률 @(rec.BacktestHit3)% | 랜덤 대비 +@(((rec.BacktestScore - 0.8) / 0.8 * 100).ToString("F0"))%
                     </div>
                 </div>
 
@@ -150,8 +150,9 @@
 
         <div class="card" style="margin-top: 15px; background: #e8f5e9; border: 1px solid #c8e6c9;">
             <p style="margin: 0; color: #2e7d32; font-size: 13px;">
-                <strong>참고:</strong> 이 추천은 과거 1,200+ 회차 데이터의 패턴 분석에 기반합니다.
-                백테스트에서 랜덤(0.800) 대비 높은 적중률을 보였으나, 당첨을 보장하지 않습니다.
+                <strong>참고:</strong> 이 추천은 조작 가설 기반으로 발견된 통계적 유의미 패턴에 기반합니다.
+                ±3오프셋(17.6%), 보수(17.1%), LCG(18%), ±1회피 패턴을 활용합니다.
+                백테스트에서 랜덤 대비 +109% 적중률, 6개(1등) 2%를 달성했으나 당첨을 보장하지 않습니다.
             </p>
         </div>
     }
@@ -217,9 +218,9 @@
 
     private string GetScoreColor(double score)
     {
-        if (score >= 1.59) return "#4CAF50";
-        if (score >= 1.57) return "#ff9800";
-        if (score >= 1.55) return "#2196F3";
+        if (score >= 1.65) return "#4CAF50";
+        if (score >= 1.62) return "#ff9800";
+        if (score >= 1.59) return "#2196F3";
         return "#9e9e9e";
     }
 }
