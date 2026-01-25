@@ -6,10 +6,10 @@ using LottoAnalyzer.Core.Models;
 namespace LottoAnalyzer.Core.Services
 {
     /// <summary>
-    /// 패턴 기반 추천 서비스 - 조작 가설 기반 v6 검증 결과
-    /// Triple(LCG+off3+depth): 1.670, 5+ 10%, 6개(1등) 2%
-    /// ±3오프셋+depth보수: 1.670, 5+ 10%, 6개 1%
-    /// LCG 패턴: 1.630, 5+ 8%
+    /// 패턴 기반 추천 서비스 - 조작 가설 기반 v9 검증 결과
+    /// v9최적(l3o6d3): 1.650, 5+ 11%, 6개(1등) 3%
+    /// v9확장7개: 1.790, 5+ 11%, 6개 5%
+    /// ±3오프셋+depth보수: 1.670, 5+ 10%
     /// 메타전략: 1.600, 3+ 23%
     /// </summary>
     public class PatternRecommendationService
@@ -21,14 +21,14 @@ namespace LottoAnalyzer.Core.Services
             var sortedResults = results.OrderBy(r => r.Round).ToList();
             var recommendations = new List<PatternRecommendation>();
 
-            // 1. Triple 조작패턴 (평균 1.670, 5+ 10%, 6개 2%)
-            recommendations.Add(GenerateTripleManipulation(sortedResults));
+            // 1. v9 최적패턴 (평균 1.650, 5+ 11%, 6개 3%)
+            recommendations.Add(GenerateV9Optimal(sortedResults));
 
-            // 2. ±3 오프셋+depth보수 (평균 1.670, 5+ 10%, 6개 1%)
+            // 2. v9 확장 7개 (평균 1.790, 5+ 11%, 6개 5%)
+            recommendations.Add(GenerateV9Extended7(sortedResults));
+
+            // 3. ±3 오프셋+depth보수 (평균 1.670, 5+ 10%)
             recommendations.Add(GenerateOffset3Depth(sortedResults));
-
-            // 3. LCG 패턴 (평균 1.630, 5+ 8%)
-            recommendations.Add(GenerateLcgPattern(sortedResults));
 
             // 4. 메타전략+합계필터 (평균 1.600, 3+ 23%)
             recommendations.Add(GenerateMetaStrategy(sortedResults));
@@ -37,11 +37,10 @@ namespace LottoAnalyzer.Core.Services
         }
 
         /// <summary>
-        /// Triple 조작패턴 (v6 1위: 평균 1.670, 5+적중 10%, 6개 2%)
-        /// LCG(13,31) + ±3 오프셋 + 다회차 보수 패턴 조합
-        /// 조작 가설: 이전 번호의 ±3, 보수(46-n), LCG 변환이 통계적으로 유의미
+        /// v9 최적패턴 (v9 1위: 평균 1.650, 5+적중 11%, 6개 3%)
+        /// l3_o6_d3_0.8_p3: LCG(w3) + ±3오프셋(w6) + ±1회피(w3) + depth3(decay0.8)
         /// </summary>
-        private PatternRecommendation GenerateTripleManipulation(List<LottoResult> results)
+        private PatternRecommendation GenerateV9Optimal(List<LottoResult> results)
         {
             var gapInfo = CalculateGapInfo(results);
             var hot = GetHotScores(results, 20);
@@ -57,33 +56,33 @@ namespace LottoAnalyzer.Core.Services
                 scores[i] = scores[i] * 3 + hot[i];
             }
 
-            // LCG(a=13, c=31) 패턴
+            // LCG(a=13, c=31) 가중치 3
             for (int k = 0; k < 6; k++)
             {
                 int lcg = ((13 * nextRound + 31 + k * 7) % 45) + 1;
-                scores[lcg] += 4;
+                scores[lcg] += 3;
             }
 
-            // ±3 오프셋 + ±1 회피
+            // ±3 오프셋 가중치 6, ±1 회피 가중치 3
             foreach (var n in prev)
             {
                 foreach (int d in new[] { -3, 3 })
                 {
                     int t = n + d;
-                    if (t >= 1 && t <= 45) scores[t] += 4;
+                    if (t >= 1 && t <= 45) scores[t] += 6;
                 }
                 foreach (int d in new[] { -1, 1 })
                 {
                     int t = n + d;
-                    if (t >= 1 && t <= 45) scores[t] -= 2;
+                    if (t >= 1 && t <= 45) scores[t] -= 3;
                 }
             }
 
-            // depth3 보수 패턴 (이전 2~3회차)
+            // depth3 보수 패턴 (decay 0.8)
             for (int d = 2; d <= Math.Min(3, results.Count); d++)
             {
                 var prevD = results[results.Count - d].Numbers;
-                double w = Math.Pow(0.6, d - 1) * 4;
+                double w = Math.Pow(0.8, d - 1) * 5;
                 foreach (var n in prevD)
                 {
                     int comp = 46 - n;
@@ -100,12 +99,84 @@ namespace LottoAnalyzer.Core.Services
 
             return new PatternRecommendation
             {
-                StrategyName = "Triple 조작패턴",
-                Description = "LCG(13,31) + ±3오프셋 + 다회차보수 조합 - 조작 가설 기반 5+ 적중 10%",
-                BacktestScore = 1.670,
+                StrategyName = "v9 최적패턴",
+                Description = "v9 백테스트 1위 - 5+ 적중 11%, 6개(1등) 3%",
+                BacktestScore = 1.650,
                 BacktestHit3 = 21,
                 Numbers = selected.OrderBy(n => n).ToArray(),
-                StrategyDetail = "LCG(a=13,c=31) + 이전번호±3가중 + ±1회피 + 2~3회차전 보수(46-n) → 구간별 최고점 선택"
+                StrategyDetail = "LCG(w3) + ±3오프셋(w6) + ±1회피(w3) + depth3(decay0.8) → 구간별 최고점"
+            };
+        }
+
+        /// <summary>
+        /// v9 확장 7개 (v9 7개 1위: 평균 1.790, 5+적중 11%, 6개 5%)
+        /// l6_o3_d3_0.7: LCG(w6) + ±3오프셋(w3) + depth3(decay0.7) → 7개 선택
+        /// </summary>
+        private PatternRecommendation GenerateV9Extended7(List<LottoResult> results)
+        {
+            var gapInfo = CalculateGapInfo(results);
+            var hot = GetHotScores(results, 20);
+            var prev = results.Last().Numbers;
+            int nextRound = results.Last().Round + 1;
+
+            var scores = new Dictionary<int, double>();
+            for (int i = 1; i <= 45; i++)
+            {
+                var (avgGap, currentGap) = gapInfo[i];
+                double ratio = avgGap > 0 ? (double)currentGap / avgGap : 1.0;
+                scores[i] = (ratio >= 0.8 && ratio <= 2.5) ? ratio * 10 : 0;
+                scores[i] = scores[i] * 3 + hot[i];
+            }
+
+            // LCG(a=13, c=31) 가중치 6
+            for (int k = 0; k < 6; k++)
+            {
+                int lcg = ((13 * nextRound + 31 + k * 7) % 45) + 1;
+                scores[lcg] += 6;
+            }
+
+            // ±3 오프셋 가중치 3, ±1 회피 가중치 2
+            foreach (var n in prev)
+            {
+                foreach (int d in new[] { -3, 3 })
+                {
+                    int t = n + d;
+                    if (t >= 1 && t <= 45) scores[t] += 3;
+                }
+                foreach (int d in new[] { -1, 1 })
+                {
+                    int t = n + d;
+                    if (t >= 1 && t <= 45) scores[t] -= 2;
+                }
+            }
+
+            // depth3 보수 패턴 (decay 0.7)
+            for (int d = 2; d <= Math.Min(3, results.Count); d++)
+            {
+                var prevD = results[results.Count - d].Numbers;
+                double w = Math.Pow(0.7, d - 1) * 5;
+                foreach (var n in prevD)
+                {
+                    int comp = 46 - n;
+                    if (comp >= 1 && comp <= 45) scores[comp] += w;
+                    foreach (int off in new[] { -2, 2 })
+                    {
+                        int t = n + off;
+                        if (t >= 1 && t <= 45) scores[t] += w * 0.5;
+                    }
+                }
+            }
+
+            var selected = SelectFromRangesPlusTop(scores);
+
+            return new PatternRecommendation
+            {
+                StrategyName = "v9 확장 7개",
+                Description = "7개 선택으로 6개 적중 확률 5% - 반자동 추천용",
+                BacktestScore = 1.790,
+                BacktestHit3 = 24,
+                Numbers = selected.OrderBy(n => n).ToArray(),
+                StrategyDetail = "LCG(w6) + ±3오프셋(w3) + depth3(decay0.7) → 구간별 5개 + 상위 2개 = 7개"
             };
         }
 
@@ -170,45 +241,6 @@ namespace LottoAnalyzer.Core.Services
                 BacktestHit3 = 24,
                 Numbers = selected.OrderBy(n => n).ToArray(),
                 StrategyDetail = "이전번호±3가중(w6) + ±1페널티(w3) + 2~3회차전 보수/±2 → 구간별 최고점"
-            };
-        }
-
-        /// <summary>
-        /// LCG 패턴 (v6 3위: 평균 1.630, 5+적중 8%)
-        /// 회차 기반 LCG(a=13, c=17) 변환이 18% 유의미
-        /// </summary>
-        private PatternRecommendation GenerateLcgPattern(List<LottoResult> results)
-        {
-            var gapInfo = CalculateGapInfo(results);
-            var hot = GetHotScores(results, 20);
-            int nextRound = results.Last().Round + 1;
-
-            var scores = new Dictionary<int, double>();
-            for (int i = 1; i <= 45; i++)
-            {
-                var (avgGap, currentGap) = gapInfo[i];
-                double ratio = avgGap > 0 ? (double)currentGap / avgGap : 1.0;
-                scores[i] = (ratio >= 0.8 && ratio <= 2.5) ? ratio * 10 : 0;
-                scores[i] = scores[i] * 3 + hot[i];
-            }
-
-            // LCG(a=13, c=17)
-            for (int k = 0; k < 6; k++)
-            {
-                int lcg = ((13 * nextRound + 17 + k * 7) % 45) + 1;
-                scores[lcg] += 5;
-            }
-
-            var selected = SelectFromRanges(scores);
-
-            return new PatternRecommendation
-            {
-                StrategyName = "LCG 패턴",
-                Description = $"회차({nextRound}) 기반 LCG(13,17) 변환 - 18% 유의미 패턴",
-                BacktestScore = 1.630,
-                BacktestHit3 = 22,
-                Numbers = selected.OrderBy(n => n).ToArray(),
-                StrategyDetail = $"LCG: (13×{nextRound}+17+k×7) mod 45 + 간격 점수 + 핫넘버 → 구간별 최고점"
             };
         }
 
@@ -389,6 +421,34 @@ namespace LottoAnalyzer.Core.Services
             foreach (var kv in remaining)
             {
                 if (selected.Count >= 6) break;
+                selected.Add(kv.Key);
+            }
+
+            return selected;
+        }
+
+        private List<int> SelectFromRangesPlusTop(Dictionary<int, double> scores)
+        {
+            var ranges = new[] { (1, 9), (10, 19), (20, 29), (30, 39), (40, 45) };
+            var selected = new List<int>();
+
+            foreach (var (min, max) in ranges)
+            {
+                int best = -1;
+                double bestScore = -1;
+                for (int n = min; n <= max; n++)
+                {
+                    if (scores[n] > bestScore) { bestScore = scores[n]; best = n; }
+                }
+                if (best > 0) selected.Add(best);
+            }
+
+            // 나머지 중 상위 2개 추가 (총 7개)
+            var remaining = scores.Where(kv => !selected.Contains(kv.Key))
+                .OrderByDescending(kv => kv.Value);
+            foreach (var kv in remaining)
+            {
+                if (selected.Count >= 7) break;
                 selected.Add(kv.Key);
             }
 
