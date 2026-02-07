@@ -15,6 +15,16 @@ namespace LottoAnalyzer.Core.Services
     public class PatternRecommendationService
     {
         private readonly Random _random = new();
+        private readonly LottoDataService? _dataService;
+        private readonly StatisticsService? _statisticsService;
+
+        public PatternRecommendationService() { }
+
+        public PatternRecommendationService(LottoDataService dataService, StatisticsService statisticsService)
+        {
+            _dataService = dataService;
+            _statisticsService = statisticsService;
+        }
 
         public List<PatternRecommendation> GeneratePatternRecommendations(List<LottoResult> results)
         {
@@ -32,6 +42,18 @@ namespace LottoAnalyzer.Core.Services
 
             // 4. 메타전략+합계필터 (평균 1.600, 3+ 23%)
             recommendations.Add(GenerateMetaStrategy(sortedResults));
+
+            // 5. 빈도분석 6년치 (초기 방식)
+            if (_dataService != null && _statisticsService != null)
+            {
+                recommendations.Add(GenerateFrequencyRecommendation(6));
+            }
+
+            // 6. 빈도분석 5년치 (초기 방식)
+            if (_dataService != null && _statisticsService != null)
+            {
+                recommendations.Add(GenerateFrequencyRecommendation(5));
+            }
 
             return recommendations;
         }
@@ -300,6 +322,68 @@ namespace LottoAnalyzer.Core.Services
                 BacktestHit3 = 23,
                 Numbers = best.OrderBy(n => n).ToArray(),
                 StrategyDetail = "간격(3종) + 핫넘버(2종) + 보너스 + 동반출현 + 구간별 분석 → 합계 121~160 필터"
+            };
+        }
+
+
+        /// <summary>
+        /// 빈도분석 추천 (초기 방식) - 지정 연수의 데이터에서 빈도 상위 번호를 구간 균형 배분
+        /// </summary>
+        private PatternRecommendation GenerateFrequencyRecommendation(int years)
+        {
+            var yearResults = _dataService!.GetSampleData(years);
+            var stats = _statisticsService!.CalculateOverallStatistics(yearResults);
+
+            // 각 구간에서 빈도 높은 번호 선택 (초기 방식)
+            var ranges = new[]
+            {
+                stats.Where(s => s.Number >= 1 && s.Number <= 10).OrderByDescending(s => s.Count).Take(3).ToList(),
+                stats.Where(s => s.Number >= 11 && s.Number <= 20).OrderByDescending(s => s.Count).Take(3).ToList(),
+                stats.Where(s => s.Number >= 21 && s.Number <= 30).OrderByDescending(s => s.Count).Take(3).ToList(),
+                stats.Where(s => s.Number >= 31 && s.Number <= 40).OrderByDescending(s => s.Count).Take(3).ToList(),
+                stats.Where(s => s.Number >= 41 && s.Number <= 45).OrderByDescending(s => s.Count).Take(3).ToList()
+            };
+
+            var selected = new List<int>();
+
+            // 각 구간에서 최소 1개씩 선택
+            foreach (var range in ranges)
+            {
+                if (range.Count > 0 && selected.Count < 5)
+                {
+                    var pick = range[_random.Next(range.Count)];
+                    selected.Add(pick.Number);
+                }
+            }
+
+            // 나머지 채우기 (전체 빈도 순)
+            var allCandidates = ranges.SelectMany(r => r).Where(s => !selected.Contains(s.Number)).ToList();
+            while (selected.Count < 6 && allCandidates.Count > 0)
+            {
+                var pick = allCandidates[_random.Next(allCandidates.Count)];
+                selected.Add(pick.Number);
+                allCandidates.Remove(pick);
+            }
+
+            // 부족하면 전체 통계에서 보충
+            if (selected.Count < 6)
+            {
+                foreach (var stat in stats)
+                {
+                    if (selected.Count >= 6) break;
+                    if (!selected.Contains(stat.Number))
+                        selected.Add(stat.Number);
+                }
+            }
+
+            return new PatternRecommendation
+            {
+                StrategyName = $"빈도분석 {years}년치",
+                Description = $"최근 {years}년({yearResults.Count}회) 출현 빈도 기반 구간별 균형 배분",
+                BacktestScore = 0,
+                BacktestHit3 = 0,
+                Numbers = selected.OrderBy(n => n).ToArray(),
+                StrategyDetail = $"{years}년치 데이터에서 1~10, 11~20, 21~30, 31~40, 41~45 각 구간 빈도 상위 번호 추출"
             };
         }
 
