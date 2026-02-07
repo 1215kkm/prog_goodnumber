@@ -101,8 +101,8 @@ namespace LottoAnalyzer.Core.Services
             {
                 StrategyName = "v9 최적패턴",
                 Description = "v9 백테스트 1위 - 5+ 적중 11%, 6개(1등) 3%",
-                BacktestScore = 1.650,
-                BacktestHit3 = 21,
+                BacktestScore = 1.610,
+                BacktestHit3 = 20,
                 Numbers = selected.OrderBy(n => n).ToArray(),
                 StrategyDetail = "LCG(w3) + ±3오프셋(w6) + ±1회피(w3) + depth3(decay0.8) → 구간별 최고점"
             };
@@ -173,8 +173,8 @@ namespace LottoAnalyzer.Core.Services
             {
                 StrategyName = "v9 확장 7개",
                 Description = "7개 선택으로 6개 적중 확률 5% - 반자동 추천용",
-                BacktestScore = 1.790,
-                BacktestHit3 = 24,
+                BacktestScore = 1.750,
+                BacktestHit3 = 23,
                 Numbers = selected.OrderBy(n => n).ToArray(),
                 StrategyDetail = "LCG(w6) + ±3오프셋(w3) + depth3(decay0.7) → 구간별 5개 + 상위 2개 = 7개"
             };
