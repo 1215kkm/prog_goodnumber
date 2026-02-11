@@ -121,6 +121,9 @@ function getDefaultDraws(): LotteryDraw[] {
 // 2025-2026년 데이터 (동행복권 공식 확인)
 function get2025Data(): LotteryDraw[] {
   return [
+    { round: 1210, date: '2026-02-07', numbers: [1, 7, 9, 17, 27, 38], bonus: 31 },
+    { round: 1209, date: '2026-01-31', numbers: [2, 17, 20, 35, 37, 39], bonus: 24 },
+    { round: 1208, date: '2026-01-24', numbers: [6, 27, 30, 36, 38, 42], bonus: 25 },
     { round: 1207, date: '2026-01-17', numbers: [10, 22, 24, 27, 38, 45], bonus: 11 },
     { round: 1206, date: '2026-01-10', numbers: [1, 3, 17, 26, 27, 42], bonus: 23 },
     { round: 1205, date: '2026-01-03', numbers: [1, 4, 16, 23, 31, 41], bonus: 2 },

@@ -77,13 +77,31 @@
                 <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; flex-wrap: wrap; gap: 8px;">
                     <div>
                         <span style="font-weight: bold; font-size: 16px;">@rec.StrategyName</span>
-                        <span style="background: @GetScoreColor(rec.BacktestScore); color: #fff; padding: 2px 8px; border-radius: 12px; font-size: 12px; margin-left: 8px;">
-                            @(rec.BacktestScore.ToString("F3")) avg
-                        </span>
+                        @if (rec.BacktestScore > 0)
+                        {
+                            <span style="background: @GetScoreColor(rec.BacktestScore); color: #fff; padding: 2px 8px; border-radius: 12px; font-size: 12px; margin-left: 8px;">
+                                @(rec.BacktestScore.ToString("F3")) avg
+                            </span>
+                        }
+                        else
+                        {
+                            <span style="background: #607d8b; color: #fff; padding: 2px 8px; border-radius: 12px; font-size: 12px; margin-left: 8px;">
+                                빈도 통계
+                            </span>
+                        }
                     </div>
-                    <div style="font-size: 12px; color: #888;">
-                        적중률 @(rec.BacktestHit3)% | 랜덤 대비 +@(((rec.BacktestScore - 0.8) / 0.8 * 100).ToString("F0"))%
-                    </div>
+                    @if (rec.BacktestScore > 0)
+                    {
+                        <div style="font-size: 12px; color: #888;">
+                            적중률 @(rec.BacktestHit3)% | 랜덤 대비 +@(((rec.BacktestScore - 0.8) / 0.8 * 100).ToString("F0"))%
+                        </div>
+                    }
+                    else
+                    {
+                        <div style="font-size: 12px; color: #888;">
+                            구간별 균형 배분 방식
+                        </div>
+                    }
                 </div>
 
                 <p style="color: #666; font-size: 13px; margin-bottom: 12px;">@rec.Description</p>
@@ -214,6 +232,7 @@
 
     private string GetScoreColor(double score)
     {
+        if (score <= 0) return "#607d8b";
         if (score >= 1.65) return "#4CAF50";
         if (score >= 1.62) return "#ff9800";
         if (score >= 1.59) return "#2196F3";
