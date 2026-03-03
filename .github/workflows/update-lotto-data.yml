@@ -1,9 +1,9 @@
 name: Update Lotto Data
 
 on:
-  # 매주 토요일 21:30 KST (12:30 UTC)
+  # 매주 토요일 22:00 KST (13:00 UTC) - 추첨(20:45) 후 충분한 여유
   schedule:
-    - cron: '30 12 * * 6'
+    - cron: '0 13 * * 6'
 
   # 수동 실행 가능
   workflow_dispatch:
@@ -27,10 +27,7 @@ jobs:
           node-version: '20'
 
       - name: Run update script
-        id: update
-        run: |
-          node scripts/update-lotto-data.js
-          echo "changes=$(git status --porcelain | wc -l)" >> $GITHUB_OUTPUT
+        run: node scripts/update-lotto-data.js
 
       - name: Check for changes
         id: check
@@ -46,7 +43,7 @@ jobs:
         run: |
           git config --local user.email "github-actions[bot]@users.noreply.github.com"
           git config --local user.name "github-actions[bot]"
-          git add LottoAnalyzer.Core/Services/LottoDataService.cs
+          git add LottoAnalyzer.Core/Services/LottoDataService.cs LottoApp/src/services/lotteryService.ts
           git commit -m "Auto-update: Add latest lotto results $(date +'%Y-%m-%d')"
           git push
 
