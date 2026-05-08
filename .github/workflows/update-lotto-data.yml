@@ -10,6 +10,7 @@ on:
 
 permissions:
   contents: write
+  pull-requests: write
 
 jobs:
   update-data:
@@ -18,8 +19,6 @@ jobs:
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
-        with:
-          token: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Setup Node.js
         uses: actions/setup-node@v4
@@ -29,24 +28,20 @@ jobs:
       - name: Run update script
         run: node scripts/update-lotto-data.js
 
-      - name: Check for changes
-        id: check
-        run: |
-          if [ -n "$(git status --porcelain)" ]; then
-            echo "has_changes=true" >> $GITHUB_OUTPUT
-          else
-            echo "has_changes=false" >> $GITHUB_OUTPUT
-          fi
+      - name: Create Pull Request
+        uses: peter-evans/create-pull-request@v6
+        with:
+          commit-message: "Auto-update: Add latest lotto results"
+          branch: auto-update/lotto-data
+          delete-branch: true
+          title: "Auto-update: 최신 로또 당첨번호 추가"
+          body: |
+            동행복권 공식 API에서 최신 회차를 자동으로 가져왔습니다.
 
-      - name: Commit and push changes
-        if: steps.check.outputs.has_changes == 'true'
-        run: |
-          git config --local user.email "github-actions[bot]@users.noreply.github.com"
-          git config --local user.name "github-actions[bot]"
-          git add LottoAnalyzer.Core/Services/LottoDataService.cs LottoApp/src/services/lotteryService.ts
-          git commit -m "Auto-update: Add latest lotto results $(date +'%Y-%m-%d')"
-          git push
+            - 워크플로우: `Update Lotto Data`
+            - 실행 시각 (UTC): `${{ github.event.repository.updated_at }}`
 
-      - name: No changes detected
-        if: steps.check.outputs.has_changes == 'false'
-        run: echo "No new lottery data to update"
+            확인 후 머지해주세요.
+          add-paths: |
+            LottoAnalyzer.Core/Services/LottoDataService.cs
+            LottoApp/src/services/lotteryService.ts
